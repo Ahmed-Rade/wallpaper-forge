@@ -51,19 +51,44 @@
   };
 
   // ---------- Palettes (each: bg + array of accent colors) ----------
+  // Each palette ships a dark variant (default) and a light variant.
   const PALETTES = [
-    { name: "Terracotta Dusk", bg: "#241f1a", colors: ["#b5532c", "#e8a04e", "#f4f1ea", "#5c6e4f"] },
-    { name: "Acid Night", bg: "#0c0d0a", colors: ["#c8ff4d", "#1a1d14", "#f4f1ea", "#3a3f2c"] },
-    { name: "Paper & Rust", bg: "#f4f1ea", colors: ["#b5532c", "#16140f", "#8a8166", "#5c6e4f"] },
-    { name: "Deep Moss", bg: "#1b2417", colors: ["#5c6e4f", "#a9b88c", "#f4f1ea", "#3d4a32"] },
-    { name: "Ink & Bone", bg: "#16140f", colors: ["#f4f1ea", "#8a8166", "#b5532c", "#3a362c"] },
-    { name: "Cobalt Pop", bg: "#0e1b33", colors: ["#3e6df0", "#f4f1ea", "#e8a04e", "#1a2c52"] },
-    { name: "Clay Sand", bg: "#e4d8bf", colors: ["#b5532c", "#16140f", "#7a6a4f", "#f4f1ea"] },
-    { name: "Plum Static", bg: "#1f1326", colors: ["#9b5de5", "#f4f1ea", "#e8a04e", "#3a2747"] },
-    { name: "Mono Slate", bg: "#222222", colors: ["#f4f1ea", "#888888", "#555555", "#cccccc"] },
-    { name: "Citrus Field", bg: "#fdf4dc", colors: ["#e8a04e", "#b5532c", "#16140f", "#5c6e4f"] },
-    { name: "Blackcurrant", bg: "#120e16", colors: ["#7c4dff", "#ff6f91", "#f4f1ea", "#2a2233"] },
-    { name: "Glacier", bg: "#eef3f4", colors: ["#2c6e7f", "#16140f", "#9fc7cf", "#e8a04e"] },
+    { name: "Terracotta Dusk",
+      dark:  { bg: "#241f1a", colors: ["#b5532c", "#e8a04e", "#f4f1ea", "#5c6e4f"] },
+      light: { bg: "#f4ece1", colors: ["#b5532c", "#a3742f", "#3a3026", "#5c6e4f"] } },
+    { name: "Acid Night",
+      dark:  { bg: "#0c0d0a", colors: ["#c8ff4d", "#1a1d14", "#f4f1ea", "#3a3f2c"] },
+      light: { bg: "#f6fbe9", colors: ["#5b8a00", "#1a1d14", "#dfeec2", "#3a3f2c"] } },
+    { name: "Paper & Rust",
+      dark:  { bg: "#3a342c", colors: ["#e8895a", "#f4f1ea", "#bdb18f", "#8aa179"] },
+      light: { bg: "#f4f1ea", colors: ["#b5532c", "#16140f", "#8a8166", "#5c6e4f"] } },
+    { name: "Deep Moss",
+      dark:  { bg: "#1b2417", colors: ["#5c6e4f", "#a9b88c", "#f4f1ea", "#3d4a32"] },
+      light: { bg: "#eef2e9", colors: ["#4a5c3d", "#1b2417", "#7c8f63", "#cdd9bb"] } },
+    { name: "Ink & Bone",
+      dark:  { bg: "#16140f", colors: ["#f4f1ea", "#8a8166", "#b5532c", "#3a362c"] },
+      light: { bg: "#f4f1ea", colors: ["#16140f", "#8a8166", "#b5532c", "#cfc9b8"] } },
+    { name: "Cobalt Pop",
+      dark:  { bg: "#0e1b33", colors: ["#3e6df0", "#f4f1ea", "#e8a04e", "#1a2c52"] },
+      light: { bg: "#eaf0fb", colors: ["#2748b0", "#16140f", "#c9762e", "#aac0ec"] } },
+    { name: "Clay Sand",
+      dark:  { bg: "#2c2418", colors: ["#d97a45", "#f4f1ea", "#a3936c", "#5c6e4f"] },
+      light: { bg: "#e4d8bf", colors: ["#b5532c", "#16140f", "#7a6a4f", "#f4f1ea"] } },
+    { name: "Plum Static",
+      dark:  { bg: "#1f1326", colors: ["#9b5de5", "#f4f1ea", "#e8a04e", "#3a2747"] },
+      light: { bg: "#f1eaf7", colors: ["#7a3dc4", "#2a1f33", "#c9762e", "#d8c3ea"] } },
+    { name: "Mono Slate",
+      dark:  { bg: "#222222", colors: ["#f4f1ea", "#888888", "#555555", "#cccccc"] },
+      light: { bg: "#f0f0f0", colors: ["#222222", "#777777", "#aaaaaa", "#444444"] } },
+    { name: "Citrus Field",
+      dark:  { bg: "#2c2410", colors: ["#e8a04e", "#d97a45", "#f4f1ea", "#7c8f63"] },
+      light: { bg: "#fdf4dc", colors: ["#e8a04e", "#b5532c", "#16140f", "#5c6e4f"] } },
+    { name: "Blackcurrant",
+      dark:  { bg: "#120e16", colors: ["#7c4dff", "#ff6f91", "#f4f1ea", "#2a2233"] },
+      light: { bg: "#f3eefb", colors: ["#5c2ed1", "#c43f63", "#2a2233", "#d9c9f0"] } },
+    { name: "Glacier",
+      dark:  { bg: "#16282c", colors: ["#6fc4d6", "#f4f1ea", "#2c6e7f", "#e8a04e"] },
+      light: { bg: "#eef3f4", colors: ["#2c6e7f", "#16140f", "#9fc7cf", "#e8a04e"] } },
   ];
 
   const PATTERN_DEFS = [
@@ -90,6 +115,7 @@
     sizeIdx: 2,
     pattern: "blobs",
     paletteIdx: 0,
+    mode: "dark",
     density: 5,
     grain: 3,
   };
@@ -102,6 +128,7 @@
   const patternGrid = document.getElementById('patternGrid');
   const paletteGrid = document.getElementById('paletteGrid');
   const deviceSeg = document.getElementById('deviceSeg');
+  const modeSeg = document.getElementById('modeSeg');
   const densitySlider = document.getElementById('densitySlider');
   const densityVal = document.getElementById('densityVal');
   const grainSlider = document.getElementById('grainSlider');
@@ -119,10 +146,14 @@
   }
 
   // ---------- Thumbnails ----------
+  function activePalette() {
+    return PALETTES[state.paletteIdx][state.mode];
+  }
+
   const THUMB_SIZE = 90;
   function renderThumb(canvas, patternId) {
     const tctx = canvas.getContext('2d');
-    const pal = PALETTES[state.paletteIdx];
+    const pal = activePalette();
     const fn = RENDERERS[patternId] || drawBlobs;
     const savedRand = rand;
     rand = mulberry32(currentSeed ^ (patternId.length * 7919) ^ state.paletteIdx ^ 1337);
@@ -168,7 +199,8 @@
       const dot = document.createElement('div');
       dot.className = 'swatch-pair';
       dot.title = p.name;
-      dot.style.background = `conic-gradient(${p.bg} 0% 50%, ${p.colors[0]} 50% 100%)`;
+      const variant = p[state.mode];
+      dot.style.background = `conic-gradient(${variant.bg} 0% 50%, ${variant.colors[0]} 50% 100%)`;
       if (i === state.paletteIdx) dot.classList.add('active');
       dot.addEventListener('click', () => {
         state.paletteIdx = i;
@@ -180,6 +212,17 @@
       paletteGrid.appendChild(dot);
     });
   }
+
+  modeSeg.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    state.mode = btn.dataset.mode;
+    [...modeSeg.children].forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    buildPaletteGrid();
+    render();
+    refreshThumbs();
+  });
 
   deviceSeg.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
@@ -219,7 +262,7 @@
   document.getElementById('downloadBtn').addEventListener('click', () => {
     const dims = SIZES[state.device][state.sizeIdx];
     const link = document.createElement('a');
-    link.download = `wallpaper-${state.pattern}-${dims.w}x${dims.h}-${currentSeed}.png`;
+    link.download = `wallpaper-${state.pattern}-${state.mode}-${dims.w}x${dims.h}-${currentSeed}.png`;
     link.href = cv.toDataURL('image/png');
     link.click();
   });
@@ -615,7 +658,7 @@
     cv.height = dims.h;
     frameLabel.textContent = `${dims.w} × ${dims.h}`;
 
-    const pal = PALETTES[state.paletteIdx];
+    const pal = activePalette();
     const fn = RENDERERS[state.pattern] || drawBlobs;
 
     // Use a frozen rng draw per render based on currentSeed, deterministic per reroll
