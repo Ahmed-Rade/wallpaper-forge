@@ -934,9 +934,11 @@
     ctx.putImageData(imgData, 0, 0);
   }
 
-  // Vertical bar-warp distortion: slices image into thin vertical bars,
-  // each stretched/offset from a random source-row window, keeping bars
-  // straight top-to-bottom (see reference "after" image).
+  // Fluted/ribbed-glass refraction: simulates vertical glass ridges like
+  // reeded glass. Each column samples a horizontally-offset source pixel
+  // (sinusoidal per ridge) AND gets a lighting gradient (highlight on one
+  // edge, shadow on the other, per ridge) so the effect reads as physical
+  // glass ribbing even over a flat solid color, not just a pixel-shuffle.
   function addBarWarp(ctx, w, h, amount) {
     if (amount <= 0) return;
     const t = amount / 10;
@@ -944,23 +946,48 @@
     const snap = document.createElement('canvas');
     snap.width = w; snap.height = h;
     snap.getContext('2d').drawImage(ctx.canvas, 0, 0);
+    const src = snap.getContext('2d').getImageData(0, 0, w, h);
+    const sd = src.data;
 
-    const barCount = Math.round(lerp(20, 90, t));
-    const barW = w / barCount;
-    const maxStretch = lerp(0.0, 0.9, t);
+    const out = ctx.createImageData(w, h);
+    const od = out.data;
 
-    for (let i = 0; i < barCount; i++) {
-      const x = i * barW;
-      const stretch = 1 + (rand() - 0.3) * maxStretch;
-      const srcH = h / stretch;
-      const srcY = (h - srcH) * rand();
-      ctx.drawImage(
-        snap,
-        x, srcY, barW + 1, srcH,
-        x, 0, barW + 1, h
-      );
+    const ridgeW = lerp(26, 9, t);            // px per ridge, denser at high t
+    const ridgeCount = Math.max(1, Math.round(w / ridgeW));
+    const actualRidgeW = w / ridgeCount;
+    const maxShift = lerp(0, actualRidgeW * 0.9, t);   // horizontal pixel displacement
+    const lightStrength = lerp(0, 0.55, t);             // highlight/shadow intensity
+    const jitter = lerp(0, 0.15, t);
+
+    for (let y = 0; y < h; y++) {
+      // slight per-row jitter so ridges aren't perfectly uniform vertically
+      const rowJ = (Math.sin(y * 0.07) * 0.5 + 0.5) * jitter;
+      for (let x = 0; x < w; x++) {
+        const ridgePos = (x / actualRidgeW) % 1; // 0..1 across this ridge
+        const curve = Math.sin((ridgePos + rowJ) * Math.PI); // 0 at edges, 1 at center
+        const slope = Math.cos((ridgePos + rowJ) * Math.PI); // -1..1, drives refraction dir
+
+        const shift = slope * maxShift;
+        let sx = Math.round(x + shift);
+        sx = Math.max(0, Math.min(w - 1, sx));
+
+        const si = (y * w + sx) * 4;
+        const di = (y * w + x) * 4;
+
+        // lighting: edges of each ridge get shadow, just-off-center gets a
+        // bright specular streak, like light catching a curved rib.
+        const light = (slope * lightStrength) + (Math.pow(curve, 6) * lightStrength * 0.9);
+
+        od[di]   = clamp255(sd[si]   + light * 255);
+        od[di+1] = clamp255(sd[si+1] + light * 255);
+        od[di+2] = clamp255(sd[si+2] + light * 255);
+        od[di+3] = sd[si+3];
+      }
     }
+    ctx.putImageData(out, 0, 0);
   }
+
+  function clamp255(v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
 
   // ---------- Render ----------
   function render() {
