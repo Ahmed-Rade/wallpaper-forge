@@ -6,8 +6,9 @@ A browser-based wallpaper generator. Pick a device, a pattern, and a palette —
 
 ## Features
 
-- **Device presets** — Phone, Desktop, or Square, each with real resolutions (iPhone 16 Pro Max, 4K, MacBook Pro, etc.)
-- **9 procedural patterns** — stripes, grid, dots, waves, blobs, triangles, rings, shards, scatter marks
+- **Device presets** — Phone, Desktop, or Square, each with real resolutions (iPhone 16 Pro Max, 5K, Ultrawide, etc.)
+- **15 procedural patterns** — stripes, grid, dots, waves, blobs, triangles, rings, shards, scatter marks, voronoi, hex grid, noise field, spiral, crosshatch, confetti
+- **Live pattern thumbnails** — preview each pattern before picking it
 - **12 curated palettes** — terracotta dusk, acid night, cobalt pop, and more
 - **Density & grain controls** — tune complexity and texture
 - **Reroll** — generate a new random variation of the current pattern

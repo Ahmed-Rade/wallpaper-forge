@@ -22,22 +22,31 @@
   const SIZES = {
     phone: [
       { label: "iPhone 16 Pro Max — 1320×2868", w: 1320, h: 2868 },
+      { label: "iPhone 16 Pro — 1206×2622", w: 1206, h: 2622 },
       { label: "iPhone 15/14 — 1170×2532", w: 1170, h: 2532 },
       { label: "iPhone SE — 750×1334", w: 750, h: 1334 },
+      { label: "Pixel 9 Pro — 1280×2856", w: 1280, h: 2856 },
       { label: "Pixel 9 — 1080×2400", w: 1080, h: 2400 },
       { label: "Galaxy S24 — 1080×2340", w: 1080, h: 2340 },
+      { label: "Galaxy S24 Ultra — 1440×3120", w: 1440, h: 3120 },
     ],
     desktop: [
       { label: "1920×1080 (FHD)", w: 1920, h: 1080 },
       { label: "2560×1440 (QHD)", w: 2560, h: 1440 },
       { label: "3840×2160 (4K)", w: 3840, h: 2160 },
+      { label: "5120×2880 (5K)", w: 5120, h: 2880 },
       { label: "3024×1964 (MBP 14\")", w: 3024, h: 1964 },
+      { label: "3456×2234 (MBP 16\")", w: 3456, h: 2234 },
       { label: "2560×1600 (16:10)", w: 2560, h: 1600 },
+      { label: "3440×1440 (Ultrawide)", w: 3440, h: 1440 },
+      { label: "5120×1440 (Super Ultrawide)", w: 5120, h: 1440 },
+      { label: "1280×720 (HD)", w: 1280, h: 720 },
     ],
     square: [
       { label: "1080×1080", w: 1080, h: 1080 },
       { label: "1440×1440", w: 1440, h: 1440 },
       { label: "2048×2048", w: 2048, h: 2048 },
+      { label: "2880×2880", w: 2880, h: 2880 },
     ],
   };
 
@@ -67,12 +76,18 @@
     { id: "rings",     label: "Rings" },
     { id: "shards",    label: "Shards" },
     { id: "scatter",   label: "Scatter Marks" },
+    { id: "voronoi",   label: "Voronoi" },
+    { id: "hexgrid",   label: "Hex Grid" },
+    { id: "noise",     label: "Noise Field" },
+    { id: "spiral",    label: "Spiral" },
+    { id: "crosshatch", label: "Crosshatch" },
+    { id: "confetti",  label: "Confetti" },
   ];
 
   // ---------- State ----------
   const state = {
     device: "phone",
-    sizeIdx: 1,
+    sizeIdx: 2,
     pattern: "blobs",
     paletteIdx: 0,
     density: 5,
@@ -103,12 +118,36 @@
     sizeSelect.value = state.sizeIdx;
   }
 
+  // ---------- Thumbnails ----------
+  const THUMB_SIZE = 90;
+  function renderThumb(canvas, patternId) {
+    const tctx = canvas.getContext('2d');
+    const pal = PALETTES[state.paletteIdx];
+    const fn = RENDERERS[patternId] || drawBlobs;
+    const savedRand = rand;
+    rand = mulberry32(currentSeed ^ (patternId.length * 7919) ^ state.paletteIdx ^ 1337);
+    fn(tctx, THUMB_SIZE, THUMB_SIZE, pal, state.density);
+    rand = savedRand;
+  }
+
+  function refreshThumbs() {
+    patternGrid.querySelectorAll('canvas').forEach(c => {
+      renderThumb(c, c.dataset.pattern);
+    });
+  }
+
   function buildPatternGrid() {
     patternGrid.innerHTML = "";
     PATTERN_DEFS.forEach(p => {
       const btn = document.createElement('button');
       btn.dataset.pattern = p.id;
       if (p.id === state.pattern) btn.classList.add('active');
+      const thumb = document.createElement('canvas');
+      thumb.width = THUMB_SIZE;
+      thumb.height = THUMB_SIZE;
+      thumb.dataset.pattern = p.id;
+      thumb.className = 'pattern-thumb';
+      btn.appendChild(thumb);
       const span = document.createElement('span');
       span.textContent = p.label;
       btn.appendChild(span);
@@ -119,6 +158,7 @@
         render();
       });
       patternGrid.appendChild(btn);
+      renderThumb(thumb, p.id);
     });
   }
 
@@ -135,6 +175,7 @@
         [...paletteGrid.children].forEach(c => c.classList.remove('active'));
         dot.classList.add('active');
         render();
+        refreshThumbs();
       });
       paletteGrid.appendChild(dot);
     });
@@ -160,6 +201,7 @@
     state.density = parseInt(densitySlider.value, 10);
     densityVal.textContent = state.density;
     render();
+    refreshThumbs();
   });
 
   grainSlider.addEventListener('input', () => {
@@ -171,6 +213,7 @@
   document.getElementById('rerollBtn').addEventListener('click', () => {
     reseed();
     render();
+    refreshThumbs();
   });
 
   document.getElementById('downloadBtn').addEventListener('click', () => {
@@ -393,6 +436,146 @@
     }
   }
 
+  function drawVoronoi(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const count = Math.round(lerp(6, 40, density / 10));
+    const cellSize = Math.max(w, h) / Math.sqrt(count) * 0.5;
+    const cols = Math.ceil(w / cellSize), rows = Math.ceil(h / cellSize);
+    const sites = [];
+    for (let i = 0; i < count; i++) {
+      sites.push({ x: rand() * w, y: rand() * h, c: pick(pal.colors) });
+    }
+    const step = Math.max(4, Math.min(w, h) * 0.01);
+    for (let y = 0; y < h; y += step) {
+      for (let x = 0; x < w; x += step) {
+        let best = 0, bestD = Infinity;
+        for (let i = 0; i < sites.length; i++) {
+          const dx = sites[i].x - x, dy = sites[i].y - y;
+          const d = dx*dx + dy*dy;
+          if (d < bestD) { bestD = d; best = i; }
+        }
+        ctx.fillStyle = rgbaFix(sites[best].c, lerp(0.55, 0.9, rand()));
+        ctx.fillRect(x, y, step, step);
+      }
+    }
+    void cols; void rows;
+  }
+
+  function drawHexgrid(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const size = Math.min(w, h) / lerp(6, 22, density / 10);
+    const hexH = size * Math.sqrt(3);
+    const cols = Math.ceil(w / (size * 1.5)) + 2;
+    const rows = Math.ceil(h / hexH) + 2;
+    for (let row = -1; row < rows; row++) {
+      for (let col = -1; col < cols; col++) {
+        if (rand() > 0.78) continue;
+        const x = col * size * 1.5;
+        const y = row * hexH + (col % 2 === 0 ? 0 : hexH / 2);
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const ang = (Math.PI / 3) * i;
+          const px = x + size * Math.cos(ang);
+          const py = y + size * Math.sin(ang);
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = rgbaFix(pick(pal.colors), lerp(0.5, 1, rand()));
+        ctx.fill();
+      }
+    }
+  }
+
+  function drawNoise(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const cell = Math.max(2, Math.min(w, h) * lerp(0.025, 0.006, density / 10));
+    const cols = Math.ceil(w / cell), rows = Math.ceil(h / cell);
+    const fx = lerp(2, 8, rand()), fy = lerp(2, 8, rand());
+    const px = rand() * 100, py = rand() * 100;
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const v = (Math.sin((x/cols)*fx + px) + Math.cos((y/rows)*fy + py) + 2) / 4;
+        const idx = Math.min(pal.colors.length - 1, Math.floor(v * pal.colors.length));
+        ctx.fillStyle = rgbaFix(pal.colors[idx], lerp(0.5, 0.95, v));
+        ctx.fillRect(x*cell, y*cell, cell+1, cell+1);
+      }
+    }
+  }
+
+  function drawSpiral(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const cx = w/2, cy = h/2;
+    const arms = Math.round(lerp(2, 7, density/10));
+    const maxR = Math.sqrt(w*w + h*h) * 0.6;
+    for (let a = 0; a < arms; a++) {
+      const offset = (a / arms) * Math.PI * 2;
+      ctx.beginPath();
+      const turns = lerp(2, 5, rand());
+      const steps = 200;
+      for (let s = 0; s <= steps; s++) {
+        const t = s / steps;
+        const ang = offset + t * Math.PI * 2 * turns;
+        const r = t * maxR;
+        const x = cx + Math.cos(ang) * r;
+        const y = cy + Math.sin(ang) * r;
+        if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = rgbaFix(pick(pal.colors), lerp(0.5, 0.95, rand()));
+      ctx.lineWidth = Math.max(2, Math.min(w,h) * lerp(0.006, 0.02, rand()));
+      ctx.stroke();
+    }
+  }
+
+  function drawCrosshatch(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const lines = Math.round(lerp(10, 70, density/10));
+    const gap = Math.max(w, h) / lines;
+    [Math.PI/4, -Math.PI/4].forEach(angle => {
+      ctx.save();
+      ctx.translate(w/2, h/2);
+      ctx.rotate(angle);
+      const diag = Math.sqrt(w*w + h*h) * 1.3;
+      for (let i = -lines; i < lines; i++) {
+        if (rand() > 0.5) continue;
+        ctx.beginPath();
+        ctx.moveTo(-diag/2 + i*gap, -diag/2);
+        ctx.lineTo(-diag/2 + i*gap, diag/2);
+        ctx.strokeStyle = rgbaFix(pick(pal.colors), lerp(0.3, 0.8, rand()));
+        ctx.lineWidth = Math.max(1, gap * lerp(0.1, 0.3, rand()));
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
+
+  function drawConfetti(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const count = Math.round(lerp(60, 700, density / 10));
+    for (let i = 0; i < count; i++) {
+      const x = rand() * w, y = rand() * h;
+      const s = Math.min(w,h) * lerp(0.008, 0.03, rand());
+      const ang = rand() * Math.PI * 2;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(ang);
+      ctx.fillStyle = rgbaFix(pick(pal.colors), lerp(0.6, 1, rand()));
+      if (rand() > 0.5) {
+        ctx.fillRect(-s/2, -s/4, s, s/2);
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, s/2.4, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
   const RENDERERS = {
     stripes: drawStripes,
     grid: drawGrid,
@@ -403,6 +586,12 @@
     rings: drawRings,
     shards: drawShards,
     scatter: drawScatter,
+    voronoi: drawVoronoi,
+    hexgrid: drawHexgrid,
+    noise: drawNoise,
+    spiral: drawSpiral,
+    crosshatch: drawCrosshatch,
+    confetti: drawConfetti,
   };
 
   function addGrain(ctx, w, h, amount) {
