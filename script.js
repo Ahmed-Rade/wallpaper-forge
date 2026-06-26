@@ -113,6 +113,7 @@
     { id: "chevron",   label: "Chevron" },
     { id: "ripple",    label: "Ripple" },
     { id: "arches",    label: "Arches" },
+    { id: "glassbars", label: "Glass Bars" },
   ];
 
   // ---------- State ----------
@@ -760,6 +761,73 @@
     }
   }
 
+  function drawGlassbars(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+
+    const barCount = Math.round(lerp(40, 220, density / 10));
+    const barW = w / barCount;
+    const glow = pick(pal.colors);
+
+    // Build a jagged ridge line: a slow random walk (the diagonal slope)
+    // with a fast sawtooth riding on top (the spiky teeth), per reference.
+    const baseTilt = pick([1, -1]) * lerp(0.25, 0.6, rand());
+    let walk = lerp(0.15, 0.55, rand());
+    const walkStep = lerp(0.01, 0.04, rand());
+    const toothFreq = lerp(0.15, 0.4, rand());
+
+    const heights = [];
+    for (let i = 0; i < barCount; i++) {
+      const t = i / barCount;
+      walk += (rand() - 0.5) * walkStep;
+      walk = Math.max(0.05, Math.min(0.95, walk));
+      const slope = 0.5 + (t - 0.5) * baseTilt;
+      const tooth = Math.abs(Math.sin(i * toothFreq + rand() * 0.3)) * lerp(0.08, 0.22, rand());
+      let level = (walk * 0.5 + slope * 0.5) + tooth;
+      level = Math.max(0.03, Math.min(0.98, level));
+      heights.push(level * h);
+    }
+
+    // Draw each bar as a vertical glow: bright core fading to transparent,
+    // clipped to the region below its ridge height.
+    for (let i = 0; i < barCount; i++) {
+      const x = i * barW;
+      const topY = h - heights[i];
+      const g = ctx.createLinearGradient(0, topY, 0, h);
+      g.addColorStop(0, rgbaFix(glow, 0.95));
+      g.addColorStop(0.15, rgbaFix(glow, 0.7));
+      g.addColorStop(0.5, rgbaFix(glow, 0.35));
+      g.addColorStop(1, rgbaFix(glow, 0.08));
+      ctx.fillStyle = g;
+      ctx.fillRect(x, topY, barW * 0.82, h - topY);
+    }
+
+    // Soften into the frosted-glass streak look.
+    const snap = document.createElement('canvas');
+    snap.width = w; snap.height = h;
+    snap.getContext('2d').drawImage(ctx.canvas, 0, 0);
+    ctx.save();
+    ctx.filter = `blur(${Math.max(0.5, w * 0.0015)}px)`;
+    ctx.drawImage(snap, 0, 0, w, h);
+    ctx.restore();
+
+    // Occasional brighter "key" bars for variation, like the thin
+    // bright lines breaking through the field in the reference.
+    const keyCount = Math.round(lerp(1, 5, rand()));
+    for (let k = 0; k < keyCount; k++) {
+      const i = Math.floor(rand() * barCount);
+      const x = i * barW;
+      const topY = 0;
+      const g = ctx.createLinearGradient(0, topY, 0, h);
+      g.addColorStop(0, rgbaFix(glow, 0.0));
+      g.addColorStop(Math.max(0.05, heights[i] / h - 0.1), rgbaFix(glow, 0.0));
+      g.addColorStop(Math.min(0.99, heights[i] / h + 0.02), rgbaFix(glow, 0.9));
+      g.addColorStop(1, rgbaFix(glow, 0.25));
+      ctx.fillStyle = g;
+      ctx.fillRect(x, 0, barW * 0.4, h);
+    }
+  }
+
   const RENDERERS = {
     stripes: drawStripes,
     grid: drawGrid,
@@ -782,6 +850,7 @@
     chevron: drawChevron,
     ripple: drawRipple,
     arches: drawArches,
+    glassbars: drawGlassbars,
   };
 
   function addGrain(ctx, w, h, amount) {
