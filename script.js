@@ -126,6 +126,7 @@
     density: 5,
     grain: 3,
     glass: 0,
+    barwarp: 0,
     solidColor: "#16282c",
   };
 
@@ -144,6 +145,8 @@
   const grainVal = document.getElementById('grainVal');
   const glassSlider = document.getElementById('glassSlider');
   const glassVal = document.getElementById('glassVal');
+  const barwarpSlider = document.getElementById('barwarpSlider');
+  const barwarpVal = document.getElementById('barwarpVal');
   const solidColorField = document.getElementById('solidColorField');
   const paletteField = document.getElementById('paletteField');
   const densityField = document.getElementById('densityField');
@@ -280,6 +283,12 @@
   glassSlider.addEventListener('input', () => {
     state.glass = parseInt(glassSlider.value, 10);
     glassVal.textContent = state.glass;
+    render();
+  });
+
+  barwarpSlider.addEventListener('input', () => {
+    state.barwarp = parseInt(barwarpSlider.value, 10);
+    barwarpVal.textContent = state.barwarp;
     render();
   });
 
@@ -925,6 +934,34 @@
     ctx.putImageData(imgData, 0, 0);
   }
 
+  // Vertical bar-warp distortion: slices image into thin vertical bars,
+  // each stretched/offset from a random source-row window, keeping bars
+  // straight top-to-bottom (see reference "after" image).
+  function addBarWarp(ctx, w, h, amount) {
+    if (amount <= 0) return;
+    const t = amount / 10;
+
+    const snap = document.createElement('canvas');
+    snap.width = w; snap.height = h;
+    snap.getContext('2d').drawImage(ctx.canvas, 0, 0);
+
+    const barCount = Math.round(lerp(20, 90, t));
+    const barW = w / barCount;
+    const maxStretch = lerp(0.0, 0.9, t);
+
+    for (let i = 0; i < barCount; i++) {
+      const x = i * barW;
+      const stretch = 1 + (rand() - 0.3) * maxStretch;
+      const srcH = h / stretch;
+      const srcY = (h - srcH) * rand();
+      ctx.drawImage(
+        snap,
+        x, srcY, barW + 1, srcH,
+        x, 0, barW + 1, h
+      );
+    }
+  }
+
   // ---------- Render ----------
   function render() {
     const dims = SIZES[state.device][state.sizeIdx];
@@ -942,6 +979,7 @@
     fn(ctx, dims.w, dims.h, pal, state.density);
     addGrain(ctx, dims.w, dims.h, state.grain);
     addGlass(ctx, dims.w, dims.h, state.glass);
+    addBarWarp(ctx, dims.w, dims.h, state.barwarp);
   }
 
   // ---------- Init ----------
