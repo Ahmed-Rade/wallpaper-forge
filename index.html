@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wallpaper Forge</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="brand">
+    <span class="eyebrow">Procedural / No two alike</span>
+    <h1>Wallpaper Forge</h1>
+    <p>Generate a one&#8209;off background, sized for your screen. Every reroll is a new variation &mdash; nothing is stored or repeated.</p>
+  </div>
+
+  <div class="field">
+    <label>Device</label>
+    <div class="seg" id="deviceSeg">
+      <button data-device="phone" class="active">Phone</button>
+      <button data-device="desktop">Desktop</button>
+      <button data-device="square">Square</button>
+    </div>
+  </div>
+
+  <div class="field" id="sizeField">
+    <label>Resolution</label>
+    <select id="sizeSelect"></select>
+  </div>
+
+  <hr>
+
+  <div class="field">
+    <label>Pattern</label>
+    <div class="pattern-grid" id="patternGrid"></div>
+  </div>
+
+  <hr>
+
+  <div class="field">
+    <label>Palette</label>
+    <div class="swatches" id="paletteGrid"></div>
+  </div>
+
+  <div class="field">
+    <label>Density</label>
+    <div class="slider-row">
+      <input type="range" id="densitySlider" min="1" max="10" value="5">
+      <span class="val" id="densityVal">5</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Grain</label>
+    <div class="slider-row">
+      <input type="range" id="grainSlider" min="0" max="10" value="3">
+      <span class="val" id="grainVal">3</span>
+    </div>
+  </div>
+
+  <hr>
+
+  <button class="reroll-btn" id="rerollBtn">⟳ Reroll this pattern</button>
+  <div class="seed-display" id="seedDisplay">seed &mdash;</div>
+
+  <button class="download-btn" id="downloadBtn">Download PNG</button>
+</div>
+
+<div class="stage">
+  <div class="frame-wrap">
+    <div class="frame-label" id="frameLabel">1170 × 2532</div>
+    <canvas id="cv"></canvas>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

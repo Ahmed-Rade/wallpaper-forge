@@ -1,0 +1,268 @@
+:root {
+    --ink: #16140f;
+    --paper: #f4f1ea;
+    --rust: #b5532c;
+    --moss: #5c6e4f;
+    --line: rgba(22,20,15,0.14);
+    --panel: #ece7db;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  }
+
+  body {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+  }
+
+  @media (max-width: 860px) {
+    body { grid-template-columns: 1fr; }
+  }
+
+  /* ---- Sidebar ---- */
+  .sidebar {
+    border-right: 1px solid var(--line);
+    padding: 28px 26px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    overflow-y: auto;
+    max-height: 100vh;
+  }
+
+  .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+
+  .brand .eyebrow {
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--rust);
+  }
+
+  .brand h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 2px 0 0;
+    letter-spacing: -0.01em;
+  }
+
+  .brand p {
+    font-size: 13px;
+    color: rgba(22,20,15,0.6);
+    margin: 4px 0 0;
+    line-height: 1.5;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .field label {
+    font-family: "Courier New", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(22,20,15,0.55);
+  }
+
+  .seg {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .seg button {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 9px 4px;
+    border: none;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+    border-right: 1px solid var(--line);
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  select {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .pattern-grid button {
+    aspect-ratio: 1;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    background: var(--panel);
+    cursor: pointer;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    font-size: 0;
+  }
+  .pattern-grid button.active {
+    outline: 2px solid var(--rust);
+    outline-offset: 2px;
+  }
+  .pattern-grid button span {
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    font-size: 8.5px;
+    font-family: "Courier New", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    background: rgba(244,241,234,0.78);
+    padding: 2px 0;
+  }
+
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 7px;
+  }
+
+  .swatch-pair {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid rgba(22,20,15,0.25);
+    position: relative;
+  }
+  .swatch-pair.active { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--rust); }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .slider-row input[type=range] {
+    flex: 1;
+    accent-color: var(--rust);
+  }
+  .slider-row .val {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    width: 34px;
+    text-align: right;
+    color: rgba(22,20,15,0.6);
+  }
+
+  .reroll-btn, .download-btn {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 13px 16px;
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid var(--ink);
+  }
+
+  .reroll-btn {
+    background: var(--paper);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .reroll-btn:hover { background: var(--panel); }
+
+  .download-btn {
+    background: var(--ink);
+    color: var(--paper);
+    margin-top: auto;
+  }
+  .download-btn:hover { background: #2a2620; }
+
+  .seed-display {
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    color: rgba(22,20,15,0.45);
+    letter-spacing: 0.04em;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 0;
+  }
+
+  /* ---- Canvas stage ---- */
+  .stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background:
+      repeating-linear-gradient(45deg, rgba(22,20,15,0.025) 0 1px, transparent 1px 14px),
+      var(--paper);
+    min-height: 100vh;
+  }
+
+  .frame-wrap {
+    position: relative;
+  }
+
+  .frame-label {
+    position: absolute;
+    top: -28px;
+    left: 0;
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(22,20,15,0.5);
+  }
+
+  canvas {
+    display: block;
+    box-shadow: 0 18px 50px rgba(22,20,15,0.22);
+    border-radius: 4px;
+    max-width: min(80vw, 520px);
+    max-height: 80vh;
+    width: auto;
+    height: auto;
+  }
+
+  @media (max-width: 860px) {
+    .sidebar { max-height: none; border-right: none; border-bottom: 1px solid var(--line); }
+    .stage { padding: 30px 18px 60px; }
+  }
