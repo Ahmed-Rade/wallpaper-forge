@@ -36,6 +36,14 @@
     <div class="pattern-grid" id="patternGrid"></div>
   </div>
 
+  <div class="field" id="solidColorField" style="display:none;">
+    <label>Solid Color</label>
+    <div class="color-row">
+      <input type="color" id="solidColorPicker" value="#16282c">
+      <input type="text" id="solidColorHex" value="#16282c" maxlength="7">
+    </div>
+  </div>
+
   <hr>
 
   <div class="field">
@@ -46,12 +54,12 @@
     </div>
   </div>
 
-  <div class="field">
+  <div class="field" id="paletteField">
     <label>Palette</label>
     <div class="swatches" id="paletteGrid"></div>
   </div>
 
-  <div class="field">
+  <div class="field" id="densityField">
     <label>Density</label>
     <div class="slider-row">
       <input type="range" id="densitySlider" min="1" max="10" value="5">

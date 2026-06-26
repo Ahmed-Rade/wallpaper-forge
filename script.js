@@ -92,6 +92,7 @@
   ];
 
   const PATTERN_DEFS = [
+    { id: "solid",     label: "Solid Color" },
     { id: "stripes",   label: "Stripes" },
     { id: "grid",      label: "Grid" },
     { id: "dots",      label: "Dot Field" },
@@ -107,6 +108,11 @@
     { id: "spiral",    label: "Spiral" },
     { id: "crosshatch", label: "Crosshatch" },
     { id: "confetti",  label: "Confetti" },
+    { id: "gradient",  label: "Gradient" },
+    { id: "checker",   label: "Checker" },
+    { id: "chevron",   label: "Chevron" },
+    { id: "ripple",    label: "Ripple" },
+    { id: "arches",    label: "Arches" },
   ];
 
   // ---------- State ----------
@@ -119,6 +125,7 @@
     density: 5,
     grain: 3,
     glass: 0,
+    solidColor: "#16282c",
   };
 
   // ---------- DOM ----------
@@ -136,6 +143,11 @@
   const grainVal = document.getElementById('grainVal');
   const glassSlider = document.getElementById('glassSlider');
   const glassVal = document.getElementById('glassVal');
+  const solidColorField = document.getElementById('solidColorField');
+  const paletteField = document.getElementById('paletteField');
+  const densityField = document.getElementById('densityField');
+  const solidColorPicker = document.getElementById('solidColorPicker');
+  const solidColorHex = document.getElementById('solidColorHex');
 
   function buildSizeOptions() {
     sizeSelect.innerHTML = "";
@@ -170,6 +182,13 @@
     });
   }
 
+  function updateFieldVisibility() {
+    const isSolid = state.pattern === 'solid';
+    solidColorField.style.display = isSolid ? '' : 'none';
+    paletteField.style.display = isSolid ? 'none' : '';
+    densityField.style.display = isSolid ? 'none' : '';
+  }
+
   function buildPatternGrid() {
     patternGrid.innerHTML = "";
     PATTERN_DEFS.forEach(p => {
@@ -189,6 +208,7 @@
         state.pattern = p.id;
         [...patternGrid.children].forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
+        updateFieldVisibility();
         render();
       });
       patternGrid.appendChild(btn);
@@ -260,6 +280,21 @@
     state.glass = parseInt(glassSlider.value, 10);
     glassVal.textContent = state.glass;
     render();
+  });
+
+  function setSolidColor(hex) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+    state.solidColor = hex;
+    solidColorPicker.value = hex;
+    solidColorHex.value = hex.toUpperCase();
+    render();
+  }
+
+  solidColorPicker.addEventListener('input', () => setSolidColor(solidColorPicker.value));
+  solidColorHex.addEventListener('change', () => {
+    let v = solidColorHex.value.trim();
+    if (v[0] !== '#') v = '#' + v;
+    setSolidColor(v);
   });
 
   document.getElementById('rerollBtn').addEventListener('click', () => {
@@ -628,6 +663,103 @@
     }
   }
 
+  function drawSolid(ctx, w, h, pal, density) {
+    ctx.fillStyle = state.solidColor;
+    ctx.fillRect(0, 0, w, h);
+    void pal; void density;
+  }
+
+  function drawGradient(ctx, w, h, pal, density) {
+    const ang = pick([0, 45, 90, 135, 180]) * Math.PI / 180;
+    const cx = w/2, cy = h/2;
+    const r = Math.sqrt(w*w + h*h) / 2;
+    const x0 = cx - Math.cos(ang)*r, y0 = cy - Math.sin(ang)*r;
+    const x1 = cx + Math.cos(ang)*r, y1 = cy + Math.sin(ang)*r;
+    const g = ctx.createLinearGradient(x0, y0, x1, y1);
+    const stops = 2 + Math.floor(lerp(0, 2, density/10));
+    g.addColorStop(0, pal.bg);
+    for (let i = 1; i < stops; i++) {
+      g.addColorStop(i/stops, rgbaFix(pick(pal.colors), lerp(0.7, 1, rand())));
+    }
+    g.addColorStop(1, pick(pal.colors));
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  function drawChecker(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const cols = Math.round(lerp(4, 20, density / 10));
+    const cellW = w / cols;
+    const rows = Math.ceil(h / cellW);
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        if ((x + y) % 2 === 0) continue;
+        ctx.fillStyle = rgbaFix(pick(pal.colors), lerp(0.6, 1, rand()));
+        ctx.fillRect(x*cellW, y*cellW, cellW, cellW);
+      }
+    }
+  }
+
+  function drawChevron(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const rows = Math.round(lerp(5, 22, density / 10));
+    const bandH = h / rows;
+    const zig = bandH * 1.4;
+    for (let r = 0; r <= rows; r++) {
+      const y = r * bandH;
+      ctx.beginPath();
+      ctx.moveTo(-zig, y);
+      let x = -zig, dir = 1;
+      while (x < w + zig) {
+        x += zig;
+        ctx.lineTo(x, y + dir * bandH * 0.5);
+        dir *= -1;
+      }
+      ctx.lineWidth = Math.max(2, bandH * lerp(0.15, 0.4, rand()));
+      ctx.strokeStyle = rgbaFix(pick(pal.colors), lerp(0.5, 1, rand()));
+      ctx.stroke();
+    }
+  }
+
+  function drawRipple(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const cx = w * lerp(0.3, 0.7, rand()), cy = h * lerp(0.3, 0.7, rand());
+    const maxR = Math.sqrt(w*w + h*h) * 0.75;
+    const rings = Math.round(lerp(8, 40, density / 10));
+    for (let i = rings; i >= 1; i--) {
+      const r = maxR * (i / rings);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = rgbaFix(pick(pal.colors), lerp(0.2, 0.7, (rings - i) / rings));
+      ctx.lineWidth = Math.max(1.5, maxR * 0.01 * lerp(0.5, 1.5, rand()));
+      ctx.stroke();
+    }
+  }
+
+  function drawArches(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const cols = Math.round(lerp(3, 10, density / 10));
+    const cellW = w / cols;
+    const baseY = h * 0.92;
+    for (let i = 0; i < cols; i++) {
+      const cx = cellW * (i + 0.5);
+      const archH = h * lerp(0.3, 0.85, rand());
+      const archW = cellW * lerp(0.5, 0.9, rand());
+      ctx.beginPath();
+      ctx.moveTo(cx - archW/2, baseY);
+      ctx.lineTo(cx - archW/2, baseY - archH + archW/2);
+      ctx.arc(cx, baseY - archH + archW/2, archW/2, Math.PI, 0);
+      ctx.lineTo(cx + archW/2, baseY);
+      ctx.closePath();
+      ctx.fillStyle = rgbaFix(pick(pal.colors), lerp(0.6, 1, rand()));
+      ctx.fill();
+    }
+  }
+
   const RENDERERS = {
     stripes: drawStripes,
     grid: drawGrid,
@@ -644,6 +776,12 @@
     spiral: drawSpiral,
     crosshatch: drawCrosshatch,
     confetti: drawConfetti,
+    solid: drawSolid,
+    gradient: drawGradient,
+    checker: drawChecker,
+    chevron: drawChevron,
+    ripple: drawRipple,
+    arches: drawArches,
   };
 
   function addGrain(ctx, w, h, amount) {
@@ -742,5 +880,6 @@
   buildSizeOptions();
   buildPatternGrid();
   buildPaletteGrid();
+  updateFieldVisibility();
   render();
 })();
