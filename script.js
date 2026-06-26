@@ -118,6 +118,7 @@
     mode: "dark",
     density: 5,
     grain: 3,
+    glass: 0,
   };
 
   // ---------- DOM ----------
@@ -133,6 +134,8 @@
   const densityVal = document.getElementById('densityVal');
   const grainSlider = document.getElementById('grainSlider');
   const grainVal = document.getElementById('grainVal');
+  const glassSlider = document.getElementById('glassSlider');
+  const glassVal = document.getElementById('glassVal');
 
   function buildSizeOptions() {
     sizeSelect.innerHTML = "";
@@ -250,6 +253,12 @@
   grainSlider.addEventListener('input', () => {
     state.grain = parseInt(grainSlider.value, 10);
     grainVal.textContent = state.grain;
+    render();
+  });
+
+  glassSlider.addEventListener('input', () => {
+    state.glass = parseInt(glassSlider.value, 10);
+    glassVal.textContent = state.glass;
     render();
   });
 
@@ -651,6 +660,64 @@
     ctx.putImageData(imgData, 0, 0);
   }
 
+  // Liquid-glass / "Nothing OS" style frosted overlay.
+  // Blurs the artwork beneath, then layers translucency, a soft
+  // diagonal specular sheen, and a thin refractive rim light.
+  function addGlass(ctx, w, h, amount) {
+    if (amount <= 0) return;
+    const t = amount / 10;
+
+    // 1. Frost the base art: snapshot, blur it back over itself.
+    const snap = document.createElement('canvas');
+    snap.width = w; snap.height = h;
+    snap.getContext('2d').drawImage(ctx.canvas, 0, 0);
+    const blurPx = Math.max(1, Math.min(w, h) * lerp(0.0, 0.035, t));
+    ctx.save();
+    ctx.filter = `blur(${blurPx}px)`;
+    ctx.drawImage(snap, 0, 0, w, h);
+    ctx.restore();
+
+    // 2. Milky translucent wash, mode-aware so it reads as glass not fog.
+    const wash = state.mode === 'dark'
+      ? `rgba(255,255,255,${lerp(0.03, 0.16, t)})`
+      : `rgba(255,255,255,${lerp(0.05, 0.30, t)})`;
+    ctx.fillStyle = wash;
+    ctx.fillRect(0, 0, w, h);
+
+    // 3. Diagonal specular sheen, top-left to center.
+    const sheen = ctx.createLinearGradient(0, 0, w * 0.65, h * 0.5);
+    sheen.addColorStop(0, `rgba(255,255,255,${lerp(0, 0.35, t)})`);
+    sheen.addColorStop(0.35, `rgba(255,255,255,${lerp(0, 0.10, t)})`);
+    sheen.addColorStop(0.7, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, 0, w, h);
+
+    // 4. Subtle vignette so edges feel like curved glass, not a flat tint.
+    const vig = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.2, w/2, h/2, Math.max(w,h)*0.7);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, `rgba(0,0,0,${lerp(0, 0.18, t)})`);
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, w, h);
+
+    // 5. Thin bright rim catching light along the top and left edges.
+    const rim = Math.max(1, Math.min(w, h) * 0.006);
+    ctx.fillStyle = `rgba(255,255,255,${lerp(0, 0.5, t)})`;
+    ctx.fillRect(0, 0, w, rim);
+    ctx.fillRect(0, 0, rim, h);
+
+    // 6. Fine static-like grain so the frost doesn't look like a flat blur.
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+    const noiseAmt = lerp(0, 6, t);
+    for (let i = 0; i < data.length; i += 4) {
+      const n = (rand() - 0.5) * noiseAmt;
+      data[i] = Math.min(255, Math.max(0, data[i] + n));
+      data[i+1] = Math.min(255, Math.max(0, data[i+1] + n));
+      data[i+2] = Math.min(255, Math.max(0, data[i+2] + n));
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+
   // ---------- Render ----------
   function render() {
     const dims = SIZES[state.device][state.sizeIdx];
@@ -667,6 +734,7 @@
 
     fn(ctx, dims.w, dims.h, pal, state.density);
     addGrain(ctx, dims.w, dims.h, state.grain);
+    addGlass(ctx, dims.w, dims.h, state.glass);
   }
 
   // ---------- Init ----------
