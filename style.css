@@ -239,6 +239,23 @@
   }
   .reroll-btn:hover { background: var(--panel); }
 
+  .random-btn {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 13px 16px;
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid var(--rust);
+    background: var(--paper);
+    color: var(--rust);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .random-btn:hover { background: var(--rust); color: var(--paper); }
+
   .download-btn {
     background: var(--ink);
     color: var(--paper);

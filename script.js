@@ -89,6 +89,30 @@
     { name: "Glacier",
       dark:  { bg: "#16282c", colors: ["#6fc4d6", "#f4f1ea", "#2c6e7f", "#e8a04e"] },
       light: { bg: "#eef3f4", colors: ["#2c6e7f", "#16140f", "#9fc7cf", "#e8a04e"] } },
+    { name: "Neon Sunset",
+      dark:  { bg: "#0d0814", colors: ["#ff2d78", "#ff8c42", "#ffe548", "#c724f7"] },
+      light: { bg: "#fff0f5", colors: ["#d4006a", "#b85a00", "#c4a800", "#8b00c4"] } },
+    { name: "Arctic Mint",
+      dark:  { bg: "#081a1c", colors: ["#00e5c4", "#0ab8d4", "#f4f1ea", "#004d4a"] },
+      light: { bg: "#e8faf8", colors: ["#007a6a", "#005f7a", "#16140f", "#a8e8e2"] } },
+    { name: "Bloodmoon",
+      dark:  { bg: "#0e0606", colors: ["#cc1a1a", "#ff5c3a", "#f4ede0", "#3a0a0a"] },
+      light: { bg: "#fdf0ec", colors: ["#aa1010", "#c4410a", "#2a0808", "#f0c4b8"] } },
+    { name: "Sage Linen",
+      dark:  { bg: "#1e2420", colors: ["#7aab6e", "#c8d8a2", "#f4f1ea", "#3a5233"] },
+      light: { bg: "#f0f4eb", colors: ["#4a7a3c", "#1e2420", "#8fad7a", "#d8e8c2"] } },
+    { name: "Electric Indigo",
+      dark:  { bg: "#08071a", colors: ["#5c4dff", "#00d4ff", "#ff4dc4", "#f4f1ea"] },
+      light: { bg: "#eeeeff", colors: ["#3a2ed4", "#007aaa", "#c4006a", "#1a1640"] } },
+    { name: "Amber Noir",
+      dark:  { bg: "#100c00", colors: ["#f5a623", "#f7d06a", "#c47800", "#f4f1ea"] },
+      light: { bg: "#fdf8e8", colors: ["#a06800", "#6a3e00", "#d4a020", "#16140f"] } },
+    { name: "Rose Quartz",
+      dark:  { bg: "#1a0f12", colors: ["#e8728c", "#f4a0b5", "#c44a6a", "#f4f1ea"] },
+      light: { bg: "#fdf0f3", colors: ["#c0395a", "#8a1a38", "#e8a0b5", "#3a1520"] } },
+    { name: "Midnight Ocean",
+      dark:  { bg: "#040d1f", colors: ["#1a4fd6", "#00b4d8", "#90e0ef", "#f4f1ea"] },
+      light: { bg: "#e8f4fb", colors: ["#0a3a9a", "#006a8a", "#3a8abf", "#c0dff0"] } },
   ];
 
   const PATTERN_DEFS = [
@@ -114,6 +138,11 @@
     { id: "ripple",    label: "Ripple" },
     { id: "arches",    label: "Arches" },
     { id: "glassbars", label: "Glass Bars" },
+    { id: "diamondnet", label: "Diamond Net" },
+    { id: "starburst",  label: "Starburst" },
+    { id: "circuit",    label: "Circuit" },
+    { id: "brushstroke",label: "Brushstrokes" },
+    { id: "topography", label: "Topography" },
   ];
 
   // ---------- State ----------
@@ -308,6 +337,36 @@
   });
 
   document.getElementById('rerollBtn').addEventListener('click', () => {
+    reseed();
+    render();
+    refreshThumbs();
+  });
+
+  document.getElementById('randomBtn').addEventListener('click', () => {
+    // Random pattern (exclude solid for more visual interest)
+    const visualPatterns = PATTERN_DEFS.filter(p => p.id !== 'solid');
+    const rp = visualPatterns[Math.floor(Math.random() * visualPatterns.length)];
+    state.pattern = rp.id;
+    [...patternGrid.children].forEach(c => {
+      c.classList.toggle('active', c.dataset.pattern === rp.id);
+    });
+    // Random palette
+    state.paletteIdx = Math.floor(Math.random() * PALETTES.length);
+    [...paletteGrid.children].forEach((c, i) => c.classList.toggle('active', i === state.paletteIdx));
+    // Random mode
+    state.mode = Math.random() > 0.5 ? 'dark' : 'light';
+    [...modeSeg.children].forEach(c => c.classList.toggle('active', c.dataset.mode === state.mode));
+    // Random density/grain
+    state.density = 1 + Math.floor(Math.random() * 10);
+    densitySlider.value = state.density;
+    densityVal.textContent = state.density;
+    state.grain = Math.floor(Math.random() * 7);
+    grainSlider.value = state.grain;
+    grainVal.textContent = state.grain;
+    state.glass = 0; glassSlider.value = 0; glassVal.textContent = 0;
+    state.barwarp = 0; barwarpSlider.value = 0; barwarpVal.textContent = 0;
+    updateFieldVisibility();
+    buildPaletteGrid();
     reseed();
     render();
     refreshThumbs();
@@ -837,6 +896,192 @@
     }
   }
 
+  function drawDiamondNet(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const cols = Math.round(lerp(4, 18, density / 10));
+    const cellW = w / cols;
+    const cellH = cellW;
+    const rows = Math.ceil(h / cellH) + 1;
+    ctx.lineWidth = Math.max(1, w * 0.001);
+    for (let y = -1; y < rows; y++) {
+      for (let x = 0; x < cols + 1; x++) {
+        const cx = x * cellW + (y % 2 === 0 ? 0 : cellW * 0.5);
+        const cy = y * cellH;
+        const hw = cellW * 0.46, hh = cellH * 0.46;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - hh);
+        ctx.lineTo(cx + hw, cy);
+        ctx.lineTo(cx, cy + hh);
+        ctx.lineTo(cx - hw, cy);
+        ctx.closePath();
+        if (rand() > 0.55) {
+          ctx.fillStyle = rgbaFix(pick(pal.colors), lerp(0.3, 0.85, rand()));
+          ctx.fill();
+        }
+        ctx.strokeStyle = rgbaFix(pal.colors[0], 0.2);
+        ctx.stroke();
+      }
+    }
+  }
+
+  function drawStarburst(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const count = Math.round(lerp(2, 9, density / 10));
+    for (let i = 0; i < count; i++) {
+      const cx = rand() * w, cy = rand() * h;
+      const rays = 8 + Math.floor(rand() * 10);
+      const outerR = Math.min(w, h) * lerp(0.1, 0.45, rand());
+      const innerR = outerR * lerp(0.2, 0.5, rand());
+      const rot = rand() * Math.PI;
+      const color = pick(pal.colors);
+      const alpha = lerp(0.4, 0.9, rand());
+      ctx.beginPath();
+      for (let r = 0; r < rays * 2; r++) {
+        const ang = (r / (rays * 2)) * Math.PI * 2 + rot;
+        const radius = r % 2 === 0 ? outerR : innerR;
+        const x = cx + Math.cos(ang) * radius;
+        const y = cy + Math.sin(ang) * radius;
+        r === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, outerR);
+      g.addColorStop(0, rgbaFix(color, alpha));
+      g.addColorStop(1, rgbaFix(color, 0));
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+  }
+
+  function drawCircuit(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const grid = Math.round(lerp(8, 28, density / 10));
+    const cellW = w / grid;
+    const nodeR = cellW * 0.12;
+    ctx.lineWidth = Math.max(1, cellW * 0.08);
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    // draw wires
+    for (let y = 0; y < grid; y++) {
+      for (let x = 0; x < grid; x++) {
+        if (rand() > 0.45) continue;
+        const cx = (x + 0.5) * cellW, cy = (y + 0.5) * cellW;
+        const [dx, dy] = pick(dirs);
+        const nx = (x + dx + 0.5) * cellW;
+        const ny = (y + dy + 0.5) * cellW;
+        if (nx < 0 || nx > w || ny < 0 || ny > h) continue;
+        const col = pick(pal.colors);
+        ctx.strokeStyle = rgbaFix(col, lerp(0.3, 0.8, rand()));
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        // L-shaped trace
+        if (rand() > 0.5) {
+          ctx.lineTo(nx, cy);
+          ctx.lineTo(nx, ny);
+        } else {
+          ctx.lineTo(cx, ny);
+          ctx.lineTo(nx, ny);
+        }
+        ctx.stroke();
+      }
+    }
+    // draw nodes
+    for (let y = 0; y < grid; y++) {
+      for (let x = 0; x < grid; x++) {
+        if (rand() > 0.3) continue;
+        const cx = (x + 0.5) * cellW, cy = (y + 0.5) * cellW;
+        ctx.beginPath();
+        ctx.arc(cx, cy, nodeR * lerp(0.5, 1.8, rand()), 0, Math.PI * 2);
+        ctx.fillStyle = rgbaFix(pick(pal.colors), lerp(0.6, 1, rand()));
+        ctx.fill();
+      }
+    }
+  }
+
+  function drawBrushstroke(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const count = Math.round(lerp(4, 22, density / 10));
+    for (let i = 0; i < count; i++) {
+      const x0 = rand() * w, y0 = rand() * h;
+      const len = Math.min(w, h) * lerp(0.15, 0.6, rand());
+      const ang = rand() * Math.PI;
+      const x1 = x0 + Math.cos(ang) * len;
+      const y1 = y0 + Math.sin(ang) * len;
+      const brushW = Math.min(w, h) * lerp(0.01, 0.07, rand());
+      const color = pick(pal.colors);
+      const alpha = lerp(0.35, 0.85, rand());
+      const segs = 12;
+      for (let s = 0; s < segs; s++) {
+        const t0 = s / segs, t1 = (s + 1) / segs;
+        const mid = (t0 + t1) / 2;
+        const w0 = brushW * Math.sin(t0 * Math.PI) * lerp(0.7, 1, rand());
+        const cx = lerp(x0, x1, mid), cy = lerp(y0, y1, mid);
+        const px = -Math.sin(ang) * w0, py = Math.cos(ang) * w0;
+        ctx.beginPath();
+        ctx.moveTo(lerp(x0,x1,t0) + px, lerp(y0,y1,t0) + py);
+        ctx.quadraticCurveTo(cx + px * 0.5, cy + py * 0.5, lerp(x0,x1,t1), lerp(y0,y1,t1));
+        ctx.quadraticCurveTo(cx - px * 0.5, cy - py * 0.5, lerp(x0,x1,t0) - px, lerp(y0,y1,t0) - py);
+        ctx.closePath();
+        ctx.fillStyle = rgbaFix(color, alpha * (0.5 + 0.5 * rand()));
+        ctx.fill();
+      }
+    }
+  }
+
+  function drawTopography(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const levels = Math.round(lerp(4, 18, density / 10));
+    // simple 2D Perlin-ish via summed sines
+    const freqs = [
+      { fx: rand() * 2 + 1, fy: rand() * 2 + 1, ph: rand() * 10 },
+      { fx: rand() * 4 + 2, fy: rand() * 4 + 2, ph: rand() * 10 },
+      { fx: rand() * 6 + 3, fy: rand() * 6 + 3, ph: rand() * 10 },
+    ];
+    function field(x, y) {
+      let v = 0;
+      for (const f of freqs) v += Math.sin(x / w * Math.PI * f.fx + f.ph) * Math.cos(y / h * Math.PI * f.fy + f.ph);
+      return v / freqs.length;
+    }
+    const step = Math.max(2, Math.round(Math.min(w, h) / 160));
+    const cols = Math.ceil(w / step) + 1;
+    const rows = Math.ceil(h / step) + 1;
+    // precompute grid
+    const grid = [];
+    for (let r = 0; r < rows; r++) {
+      grid[r] = [];
+      for (let c = 0; c < cols; c++) grid[r][c] = field(c * step, r * step);
+    }
+    ctx.lineWidth = Math.max(1, w * 0.0008);
+    for (let lv = 0; lv < levels; lv++) {
+      const threshold = lerp(-0.9, 0.9, lv / levels);
+      ctx.strokeStyle = rgbaFix(pick(pal.colors), lerp(0.25, 0.85, rand()));
+      ctx.beginPath();
+      // marching squares lite: just draw horizontal isocontour crossings
+      for (let r = 0; r < rows - 1; r++) {
+        for (let c = 0; c < cols - 1; c++) {
+          const v00 = grid[r][c], v10 = grid[r][c+1], v01 = grid[r+1][c], v11 = grid[r+1][c+1];
+          const x = c * step, y = r * step;
+          // top edge
+          if ((v00 < threshold) !== (v10 < threshold)) {
+            const t = (threshold - v00) / (v10 - v00);
+            ctx.moveTo(x + t * step, y);
+            ctx.lineTo(x + t * step, y + (rand() < 0.5 ? step * 0.25 : step));
+          }
+          // left edge
+          if ((v00 < threshold) !== (v01 < threshold)) {
+            const t = (threshold - v00) / (v01 - v00);
+            ctx.moveTo(x, y + t * step);
+            ctx.lineTo(x + (rand() < 0.5 ? step * 0.25 : step), y + t * step);
+          }
+        }
+      }
+      ctx.stroke();
+    }
+  }
+
   const RENDERERS = {
     stripes: drawStripes,
     grid: drawGrid,
@@ -860,6 +1105,11 @@
     ripple: drawRipple,
     arches: drawArches,
     glassbars: drawGlassbars,
+    diamondnet: drawDiamondNet,
+    starburst: drawStarburst,
+    circuit: drawCircuit,
+    brushstroke: drawBrushstroke,
+    topography: drawTopography,
   };
 
   function addGrain(ctx, w, h, amount) {
