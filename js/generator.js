@@ -20,9 +20,9 @@ const Generator = (() => {
     return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
   }
 
-  /* 4 palette stops -> 7 tones (lerp c0->c1, c1->c2, c2->c3) */
-  function expandPalette(colors) {
-    const [c0, c1, c2, c3] = colors;
+  /* 4 hex stops -> 7 vec3 tones (lerp c0→c1, c1→c2, c2→c3) */
+  function expandPalette(hexColors) {
+    const [c0, c1, c2, c3] = hexColors.map(hexToVec3);
     return [
       c0,
       lerp3(c0, c1, 0.5),
@@ -115,7 +115,7 @@ const Generator = (() => {
       scale:    0.6 + rng() * 0.8,
     };
 
-    const tones = expandPalette(paletteDef.colors).map(hexToVec3);
+    const tones = expandPalette(paletteDef.colors);
     const palette = {
       color0: tones[0], color1: tones[2], color2: tones[4], color3: tones[6],
       tones,
