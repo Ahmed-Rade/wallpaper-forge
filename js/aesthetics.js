@@ -62,7 +62,7 @@ const AESTHETICS = [
     layers: [
       { pass: 'washes',      blend: 'normal',  opacity: 1.0 },
       { pass: 'pooling',     blend: 'multiply', opacity: 0.5 },
-      { pass: 'paper_grain', blend: 'overlay', opacity: 0.08 },
+      { pass: 'paper_grain', blend: 'overlay', opacity: 0.2 },
     ],
   },
   {
@@ -160,6 +160,20 @@ const PALETTES = [
 /* ════════════════════════════════════════
    AESTHETIC ↔ PALETTE TAG COMPATIBILITY
 ════════════════════════════════════════ */
+/* ════════════════════════════════════════
+   CONTRAST CHECK — flag palettes whose tonal
+   range is too narrow to read as a wallpaper
+════════════════════════════════════════ */
+function luminance(hex) {
+  const n = parseInt(hex.replace('#', ''), 16);
+  const r = ((n>>16)&255)/255, g = ((n>>8)&255)/255, b = (n&255)/255;
+  return 0.2126*r + 0.7152*g + 0.0722*b;
+}
+PALETTES.forEach(p => {
+  const lums = p.colors.map(luminance);
+  p.lowContrast = (Math.max(...lums) - Math.min(...lums)) < 0.3;
+});
+
 const AESTHETIC_PALETTE_MAP = {
   0: ['dark', 'vibrant', 'cool'],           // Ethereal
   1: ['dark', 'muted', 'clean', 'earthy'],  // Brutalist

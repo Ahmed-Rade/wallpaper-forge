@@ -165,7 +165,9 @@ const Export = (() => {
 
     const uLoc = {}, cLoc = {};
     ['u_resolution','u_seed','u_time','u_mode','u_pass','u_params',
-     'u_color0','u_color1','u_color2','u_color3','u_warpOctaves','u_warpIters'].forEach(n => {
+     'u_color0','u_color1','u_color2','u_color3','u_color4','u_color5','u_color6',
+     'u_focalX','u_focalY','u_rotation','u_scale',
+     'u_warpOctaves','u_warpIters'].forEach(n => {
       uLoc[n] = gl.getUniformLocation(passProgram, n);
     });
     ['u_layer0','u_layer1','u_layer2','u_layerCount',
@@ -183,10 +185,15 @@ const Export = (() => {
     const mode   = spec.aesthetic ? spec.aesthetic.mode : 0;
     const params = spec.params || [0,0,0,0];
     const p      = spec.palette || {};
-    const color0 = p.color0 || [0.04,0.05,0.18];
-    const color1 = p.color1 || [0.18,0.78,0.86];
-    const color2 = p.color2 || [0.10,0.40,0.60];
-    const color3 = p.color3 || [0.95,0.95,1.00];
+    const tones  = p.tones || [];
+    const color0 = p.color0 || tones[0] || [0.04,0.05,0.18];
+    const color1 = p.color1 || tones[2] || [0.18,0.78,0.86];
+    const color2 = p.color2 || tones[4] || [0.10,0.40,0.60];
+    const color3 = p.color3 || tones[6] || [0.95,0.95,1.00];
+    const color4 = tones[1] || color1;
+    const color5 = tones[3] || color2;
+    const color6 = tones[5] || color3;
+    const cb     = spec.compositionBias || {};
 
     const baseLayers = (spec.aesthetic && spec.aesthetic.layers && spec.aesthetic.layers.length)
       ? spec.aesthetic.layers
@@ -221,6 +228,13 @@ const Export = (() => {
       gl.uniform3fv(uLoc['u_color1'], color1);
       gl.uniform3fv(uLoc['u_color2'], color2);
       gl.uniform3fv(uLoc['u_color3'], color3);
+      gl.uniform3fv(uLoc['u_color4'], color4);
+      gl.uniform3fv(uLoc['u_color5'], color5);
+      gl.uniform3fv(uLoc['u_color6'], color6);
+      gl.uniform1f(uLoc['u_focalX'],   cb.focalX   !== undefined ? cb.focalX   : 0.5);
+      gl.uniform1f(uLoc['u_focalY'],   cb.focalY   !== undefined ? cb.focalY   : 0.5);
+      gl.uniform1f(uLoc['u_rotation'], cb.rotation || 0.0);
+      gl.uniform1f(uLoc['u_scale'],    cb.scale    !== undefined ? cb.scale    : 1.0);
       gl.uniform1i(uLoc['u_warpOctaves'], 6);
       gl.uniform1i(uLoc['u_warpIters'], 3);
 
@@ -274,10 +288,10 @@ const Export = (() => {
     gl.uniform1i(pLoc['u_frame'], 0);
     gl.uniform2f(pLoc['u_resolution'], w, h);
     gl.uniform1f(pLoc['u_seed'], seed);
-    gl.uniform1f(pLoc['u_vignette'], 0.35);
-    gl.uniform1f(pLoc['u_grain'], 0.04);
-    gl.uniform1f(pLoc['u_chromAb'], mode === NEONNOIR_MODE ? 0.003 : 0.0);
-    gl.uniform1f(pLoc['u_bloomStrength'], BLOOM_MODES.includes(mode) ? 0.3 : 0.0);
+    gl.uniform1f(pLoc['u_vignette'], 0.4);
+    gl.uniform1f(pLoc['u_grain'], 0.07);
+    gl.uniform1f(pLoc['u_chromAb'], mode === NEONNOIR_MODE ? 0.008 : 0.0);
+    gl.uniform1f(pLoc['u_bloomStrength'], BLOOM_MODES.includes(mode) ? 0.35 : 0.15);
 
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -360,5 +374,5 @@ const Export = (() => {
     }
   }
 
-  return { exportWallpaper };
+  return { exportWallpaper, renderAtResolution };
 })();

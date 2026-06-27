@@ -196,6 +196,31 @@ body.ui-hidden .ui-bottom { opacity: 0; pointer-events: none; }
   align-self: stretch;
 }
 
+/* Seed neighbor strip */
+.neighbor-strip {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.neighbor-strip canvas {
+  width: 40px; height: 72px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 180ms ease, border-color 180ms ease, transform 180ms ease;
+  display: block;
+}
+.neighbor-strip canvas:hover {
+  opacity: 0.9;
+  border-color: rgba(255,255,255,0.5);
+}
+.neighbor-strip canvas.current-neighbor {
+  opacity: 1;
+  border-color: #fff;
+  transform: scale(1.06);
+}
+
 /* History dots */
 .hist-dots {
   display: flex;
@@ -575,4 +600,5 @@ select option { background: #111; color: #fff; }
   .bottom-cluster { gap: 6px; }
   .pill-btn { padding: 10px 12px; }
   .aux-btn { font-size: 10px; padding: 8px 8px; }
+  .neighbor-strip canvas { width: 32px; height: 58px; }
 }

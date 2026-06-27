@@ -33,6 +33,7 @@
   <div class="bottom-cluster">
     <!-- Evolve toggle, left of cluster -->
     <button class="aux-btn evolve-toggle" id="evolveToggle" title="Evolve mode (E)">Evolve</button>
+    <button class="aux-btn" id="smartBtn" title="Smart Pick: render 3 candidates, keep the best">✦ Smart</button>
 
     <!-- Main pill -->
     <div class="pill">
@@ -45,6 +46,15 @@
 
     <!-- Config gear, right of cluster -->
     <button class="aux-btn" id="configToggle" title="Settings (C)">⚙</button>
+  </div>
+
+  <!-- Seed neighbor strip -->
+  <div class="neighbor-strip" id="neighborStrip">
+    <canvas width="40" height="72" title="2 back"></canvas>
+    <canvas width="40" height="72" title="1 back"></canvas>
+    <canvas width="40" height="72" title="current"></canvas>
+    <canvas width="40" height="72" title="1 forward"></canvas>
+    <canvas width="40" height="72" title="2 forward"></canvas>
   </div>
 
   <!-- History dots -->

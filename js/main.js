@@ -99,6 +99,30 @@
     loadSeed(state.history[state.historyIndex], false);
   }
 
+  /* ── Seed neighbor strip ── */
+  function neighborSeeds(centerSeed) {
+    const seeds = [];
+    for (let d = -2; d <= 2; d++) seeds.push(((centerSeed + d) + 1000000) % 1000000);
+    return seeds;
+  }
+
+  function renderNeighborStrip(seedInt) {
+    const strip = document.getElementById('neighborStrip');
+    if (!strip) return;
+    const seeds = neighborSeeds(seedInt);
+    const canvases = strip.querySelectorAll('canvas');
+    canvases.forEach((canvas, i) => {
+      const s = seeds[i];
+      canvas.dataset.seed = s;
+      canvas.classList.toggle('current-neighbor', i === 2);
+      const spec = buildSpecForSeed(s);
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) return;
+      try { Export.renderAtResolution(gl, spec, canvas.width, canvas.height); }
+      catch (err) { console.error('Neighbor thumb error:', err); }
+    });
+  }
+
   /* ── Loading state (first render only) ── */
   let hasRenderedOnce = false;
   let loadingEl = null;
@@ -137,6 +161,7 @@
     if (addToHistory) pushHistory(seedInt);
     updateBackBtn();
     Renderer.render(state.spec);
+    renderNeighborStrip(seedInt);
 
     if (!hasRenderedOnce) {
       hasRenderedOnce = true;
@@ -156,6 +181,70 @@
     if (state.evolveMode) evolve();
     else if (canGoForward()) goForward();
     else loadSeed(randomSeedInt());
+  }
+
+  /* ── Smart Pick ── */
+  function buildSpecForSeed(seedInt) {
+    const spec = Generator.generateWallpaper(seedInt);
+    if (state.lockedMode) {
+      const lockedAesthetic = AESTHETICS.find(a => a.id === state.lockedMode);
+      if (lockedAesthetic) spec.aesthetic = lockedAesthetic;
+    }
+    return spec;
+  }
+
+  function scoreThumbnail(pixels) {
+    const n = pixels.length / 4;
+    let sum = 0, sumSq = 0, midtones = 0;
+    for (let i = 0; i < n; i++) {
+      const r = pixels[i*4], g = pixels[i*4+1], b = pixels[i*4+2];
+      const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+      sum += lum; sumSq += lum*lum;
+      if (lum > 0.25 && lum < 0.85) midtones++;
+    }
+    const mean = sum / n;
+    const variance = sumSq / n - mean*mean;
+    const midtoneRatio = midtones / n;
+    return variance * 4 + midtoneRatio;
+  }
+
+  function renderThumbnail(spec, size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return null;
+    try {
+      Export.renderAtResolution(gl, spec, size, size);
+      const pixels = new Uint8Array(size * size * 4);
+      gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      return pixels;
+    } catch (err) {
+      console.error('Smart Pick thumbnail error:', err);
+      return null;
+    } finally {
+      const ext = gl.getExtension('WEBGL_lose_context');
+      if (ext) ext.loseContext();
+    }
+  }
+
+  async function smartPick() {
+    const btn = document.getElementById('smartBtn');
+    if (btn) { btn.disabled = true; btn.classList.add('active'); }
+    try {
+      let best = null, bestScore = -Infinity;
+      for (let i = 0; i < 3; i++) {
+        const candidateSeed = randomSeedInt();
+        const spec = buildSpecForSeed(candidateSeed);
+        const pixels = renderThumbnail(spec, 64);
+        if (!pixels) continue;
+        const score = scoreThumbnail(pixels);
+        if (score > bestScore) { bestScore = score; best = candidateSeed; }
+        await new Promise(r => setTimeout(r, 0)); /* yield to keep UI responsive */
+      }
+      loadSeed(best !== null ? best : randomSeedInt());
+    } finally {
+      if (btn) { btn.disabled = false; btn.classList.remove('active'); }
+    }
   }
 
   /* ── Evolve toggle ── */
@@ -428,11 +517,19 @@
     document.getElementById('backBtn').addEventListener('click', goBack);
     document.getElementById('saveBtn').addEventListener('click', save);
     document.getElementById('evolveToggle').addEventListener('click', () => setEvolveMode(!state.evolveMode));
+    document.getElementById('smartBtn').addEventListener('click', smartPick);
     document.getElementById('configToggle').addEventListener('click', () => toggleConfig());
     document.getElementById('configClose').addEventListener('click',  () => toggleConfig(false));
     document.getElementById('configBackdrop').addEventListener('click', () => toggleConfig(false));
     document.getElementById('shortcutsClose').addEventListener('click', () => toggleShortcuts(false));
     document.getElementById('seedPill').addEventListener('click', copySeedURL);
+
+    /* Neighbor strip: click any thumbnail to navigate to it */
+    document.getElementById('neighborStrip').addEventListener('click', e => {
+      const canvas = e.target.closest('canvas[data-seed]');
+      if (!canvas) return;
+      loadSeed(parseInt(canvas.dataset.seed, 10));
+    });
 
     /* Mode lock dot: click to unlock */
     document.getElementById('modeLockDot').addEventListener('click', () => setLockedMode(null));

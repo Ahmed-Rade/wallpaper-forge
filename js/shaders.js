@@ -30,6 +30,13 @@ const SHADERS = {
     uniform vec3  u_color1;
     uniform vec3  u_color2;
     uniform vec3  u_color3;
+    uniform vec3  u_color4;
+    uniform vec3  u_color5;
+    uniform vec3  u_color6;
+    uniform float u_focalX;
+    uniform float u_focalY;
+    uniform float u_rotation;
+    uniform float u_scale;
     uniform int   u_warpOctaves;  /* quality knob: 6 desktop / 4 mobile */
     uniform int   u_warpIters;    /* domain-warp iterations: 3 desktop / 2 mobile */
 
@@ -91,6 +98,20 @@ const SHADERS = {
       return fbm(p + 4.0*s, oct,lac,gain);
     }
 
+    /* Multi-iteration domain warp — feeds back through itself 'iters'
+       times so structure (ridges, blob boundaries) reads as intentional
+       composition rather than flat noise. */
+    vec2 domainWarp(vec2 p, float seed, int octaves, int iters) {
+      vec2 q = p;
+      for (int i = 0; i < 4; i++) {
+        if (i >= iters) break;
+        q = vec2(fbm(q + vec2(seed*0.1, 0.0), octaves, 2.1, 0.48),
+                 fbm(q + vec2(0.0, seed*0.1), octaves, 2.1, 0.48));
+        p += 0.8 * q;
+      }
+      return p;
+    }
+
     /* Seed-stable hash */
     float hash(vec2 p) {
       p = fract(p * vec2(127.1, 311.7) + u_seed * 0.001);
@@ -110,7 +131,9 @@ const SHADERS = {
     vec4 ethereal_glow_centers(vec2 uv, vec2 p) {
       vec3 col = vec3(0.0);
       float totalGlow = 0.0;
-      for (int i = 0; i < 6; i++) {
+      int orbCount = 2 + int(floor(hash(vec2(u_seed*0.0023, 9.9)) * 3.0)); /* 2-4 */
+      for (int i = 0; i < 4; i++) {
+        if (i >= orbCount) break;
         float fi = float(i);
         vec2 center = vec2(
           hash(vec2(fi*3.71 + u_seed*0.001, 1.23)),
@@ -123,10 +146,19 @@ const SHADERS = {
         float dist = length(diff + vec2(wn*0.3, wn*0.2));
         float radius = 0.18 + hash(vec2(fi*7.1, 2.9)) * 0.22;
         float glow = exp(-dist * dist / (radius * radius));
-        float t = fi / 5.0;
+        float t = fi / 3.0;
         vec3 blobCol = mix(u_color1, u_color2, t);
         col += blobCol * glow * 0.9;
         totalGlow += glow;
+
+        /* soft light rays from the brightest orb */
+        if (i == 0) {
+          float ang = atan(diff.y, diff.x);
+          float rays = pow(0.5 + 0.5 * cos(ang * 6.0 + u_seed*0.01), 8.0);
+          float rayFall = exp(-dist * 1.6);
+          col += u_color3 * rays * rayFall * 0.35;
+          totalGlow += rays * rayFall * 0.2;
+        }
       }
       float coreMask = clamp(totalGlow - 0.6, 0.0, 1.0);
       col = mix(col, u_color2 * 1.4, coreMask * 0.6);
@@ -134,7 +166,7 @@ const SHADERS = {
       return vec4(clamp(col, 0.0, 1.0), alpha);
     }
     vec4 ethereal_vignette(vec2 uv, vec2 p) {
-      float vig = 1.0 - dot(uv - 0.5, uv - 0.5) * 1.8;
+      float vig = 1.0 - dot(uv - 0.5, uv - 0.5) * 2.4;
       vig = clamp(vig, 0.0, 1.0);
       return vec4(vec3(vig), 1.0);
     }
@@ -189,8 +221,16 @@ const SHADERS = {
       return vec4(vec3(0.0), mask * 0.85);
     }
     vec4 brutalist_grain(vec2 uv, vec2 p) {
+      float dotSize = 7.0;
+      vec2 hUV = uv * u_resolution / dotSize;
+      vec2 cell = floor(hUV);
+      vec2 local = fract(hUV) - 0.5;
+      float tone = hash(cell * 0.31 + u_seed * 0.0009);
+      float r = mix(0.08, 0.42, tone);
+      float dot = 1.0 - smoothstep(r, r + 0.08, length(local));
       float n = hash(floor(uv * u_resolution * 0.5) + u_seed * 0.0007);
-      return vec4(vec3(n), 1.0);
+      vec3 col = mix(vec3(n), vec3(0.0), dot * 0.5);
+      return vec4(col, 1.0);
     }
 
     /* ════════════════════════════════════════
@@ -202,17 +242,25 @@ const SHADERS = {
       return clamp(h * 0.7 + h2 * 0.3, 0.0, 1.0);
     }
     vec4 organic_terrain_base(vec2 uv, vec2 p) {
-      float bands = 6.0 + floor(u_params.x * 4.0 + 4.0);
+      float bands = 6.0 + floor(u_params.x * 4.0);
       float h = organic_height(p);
       float band = floor(h * bands) / bands;
-      vec3 bandCol;
-      if (band < 0.33) {
-        bandCol = mix(u_color0, u_color1, band / 0.33);
-      } else if (band < 0.66) {
-        bandCol = mix(u_color1, u_color2, (band - 0.33) / 0.33);
-      } else {
-        bandCol = mix(u_color2, u_color3, (band - 0.66) / 0.34);
+      vec3 stops[7];
+      stops[0]=u_color0; stops[1]=u_color4; stops[2]=u_color1;
+      stops[3]=u_color5; stops[4]=u_color2; stops[5]=u_color6; stops[6]=u_color3;
+      float t = clamp(band, 0.0, 0.999) * 6.0;
+      int lo = int(floor(t));
+      float ft = fract(t);
+      vec3 bandCol = stops[0];
+      for (int i = 0; i < 6; i++) {
+        if (i == lo) bandCol = mix(stops[i], stops[i+1], ft);
       }
+      /* ridge highlight: brighten near local elevation maxima */
+      float hx = organic_height(p + vec2(0.01, 0.0));
+      float hy = organic_height(p + vec2(0.0, 0.01));
+      float slope = length(vec2(hx - h, hy - h)) / 0.01;
+      float ridge = smoothstep(0.6, 1.4, h) * smoothstep(2.0, 0.2, slope);
+      bandCol = mix(bandCol, u_color3 * 1.15, ridge * 0.4);
       return vec4(clamp(bandCol, 0.0, 1.0), 1.0);
     }
     vec4 organic_terrain_detail(vec2 uv, vec2 p) {
@@ -220,7 +268,7 @@ const SHADERS = {
       return vec4(vec3(detail), 0.5);
     }
     vec4 organic_contours(vec2 uv, vec2 p) {
-      float bands = 6.0 + floor(u_params.x * 4.0 + 4.0);
+      float bands = 6.0 + floor(u_params.x * 4.0);
       float h = organic_height(p);
       float bandFrac = fract(h * bands);
       float contourWidth = 0.045;
@@ -234,7 +282,12 @@ const SHADERS = {
        MODE 3 — RETRO TECH  (passes: grid_bg, traces, scanlines)
     ════════════════════════════════════════ */
     vec4 retrotech_grid_bg(vec2 uv, vec2 p) {
-      return vec4(clamp(u_color0, 0.0, 1.0), 1.0);
+      float aspect = u_resolution.x / u_resolution.y;
+      vec2 gUV = vec2(uv.x * aspect, uv.y) / 0.03;
+      vec2 local = fract(gUV) - 0.5;
+      float dot = 1.0 - smoothstep(0.05, 0.09, length(local));
+      vec3 col = mix(u_color0, u_color0 * 1.4, dot * 0.5);
+      return vec4(clamp(col, 0.0, 1.0), 1.0);
     }
     vec4 retrotech_traces(vec2 uv, vec2 p) {
       float aspect = u_resolution.x / u_resolution.y;
@@ -322,15 +375,15 @@ const SHADERS = {
       col = mix(col, bodyCol, bodyMask);
       alpha = max(alpha, bodyMask);
 
-      /* stars */
+      /* stars — 3 layers of dense grids ≈ 1500+ candidate points */
       for (int i = 0; i < 3; i++) {
         float fi = float(i);
-        vec2 starUV = uv * (80.0 + fi * 60.0) + vec2(fi * 7.3, fi * 4.1);
+        vec2 starUV = uv * (180.0 + fi * 120.0) + vec2(fi * 7.3, fi * 4.1);
         vec2 starCell = floor(starUV);
         vec2 starLocal = fract(starUV);
         float starNoise = hash(starCell + vec2(u_seed * 0.001));
-        if (starNoise > 0.92) {
-          float brightness = (starNoise - 0.92) / 0.08;
+        if (starNoise > 0.93) {
+          float brightness = (starNoise - 0.93) / 0.07;
           float twinkle = hash(starCell + vec2(13.7, 0.0));
           float size = 0.15 + twinkle * 0.25;
           float starMask = 1.0 - smoothstep(size * 0.3, size, length(starLocal - 0.5));
@@ -339,6 +392,15 @@ const SHADERS = {
           alpha = max(alpha, starAlpha);
         }
       }
+
+      /* lens flare streaks through the celestial body */
+      vec2 flareDiff = bodyDiff;
+      float flareAng = atan(flareDiff.y, flareDiff.x);
+      float flareDist = length(flareDiff);
+      float flare = pow(0.5 + 0.5 * cos(flareAng * 2.0), 24.0) * exp(-flareDist * 3.0);
+      col += u_color3 * flare * 0.6;
+      alpha = max(alpha, flare * 0.4);
+
       return vec4(clamp(col, 0.0, 1.0), clamp(alpha, 0.0, 1.0));
     }
 
@@ -353,6 +415,10 @@ const SHADERS = {
       float sum = w1 + w2 + w3 + 0.001;
       vec3 col = (u_color1*w1 + u_color2*w2 + u_color3*w3) / sum;
       col = mix(u_color0, col, smoothstep(0.15, 0.6, max(w1, max(w2,w3))));
+      /* hard edge right at the wash boundary, like dried pigment */
+      float edge = fwidth(max(w1, max(w2, w3))) * 1.5;
+      float boundary = 1.0 - smoothstep(0.18, 0.18 + edge * 8.0, abs(max(w1, max(w2,w3)) - 0.4));
+      col = mix(col, col * 0.7, boundary * 0.4);
       return vec4(clamp(col, 0.0, 1.0), 1.0);
     }
     vec4 watercolor_pooling(vec2 uv, vec2 p) {
@@ -365,7 +431,7 @@ const SHADERS = {
     }
     vec4 watercolor_paper_grain(vec2 uv, vec2 p) {
       float paper = fbm(p*40.0, 3, 2.2, 0.5)*0.5+0.5;
-      return vec4(vec3(0.9,0.88,0.82) * paper, 1.0);
+      return vec4(vec3(0.9,0.88,0.82) * paper, 0.2);
     }
 
     /* ════════════════════════════════════════
@@ -395,9 +461,24 @@ const SHADERS = {
         col.b += nc.b * exp(-dB*dB/0.01) * 0.8;
         alpha = max(alpha, glow);
       }
+
+      /* vertical neon light-streak columns */
+      int columnCount = 2 + int(step(0.5, hash(vec2(u_seed*0.0017, 4.4))));
+      for (int i = 0; i < 3; i++) {
+        if (i >= columnCount) break;
+        float fi = float(i);
+        float cx = hash(vec2(fi*9.1 + u_seed*0.001, 6.6)) * aspect;
+        float dist = abs(uv.x * aspect - cx);
+        float width = 0.012 + hash(vec2(fi, 7.7)) * 0.01;
+        float streak = exp(-dist*dist/(width*width)) * (0.6 + 0.4*uv.y);
+        vec3 sc = (mod(fi,2.0) < 1.0) ? u_color1 : u_color2;
+        col += sc * streak * 0.5;
+        alpha = max(alpha, streak * 0.4);
+      }
+
       vec2 rp = uv * vec2(40.0, 4.0) + vec2(0.0, u_seed*0.13);
-      float streak = fbm(rp, 3, 2.0, 0.5);
-      float rain = smoothstep(0.55, 0.95, streak);
+      float streak2 = fbm(rp, 3, 2.0, 0.5);
+      float rain = smoothstep(0.55, 0.95, streak2);
       col += vec3(0.6,0.7,0.8) * rain * 0.2;
       alpha = max(alpha, rain * 0.2);
       return vec4(clamp(col, 0.0, 1.0), clamp(alpha, 0.0, 1.0));
@@ -460,7 +541,10 @@ const SHADERS = {
       return vec4(clamp(col, 0.0, 1.0), alpha);
     }
     vec4 arctic_light_gradient(vec2 uv, vec2 p) {
-      vec3 col = mix(vec3(1.0), u_color1*0.4 + vec3(0.6), uv.y);
+      vec3 base = mix(vec3(1.0), u_color1*0.4 + vec3(0.6), uv.y);
+      /* subsurface scatter: soft internal glow biased toward the focal point */
+      float scatter = fbm(p * 2.0, 4, 2.0, 0.5) * 0.5 + 0.5;
+      vec3 col = mix(base, u_color3, scatter * 0.25);
       return vec4(clamp(col, 0.0, 1.0), 0.5);
     }
 
@@ -510,6 +594,9 @@ const SHADERS = {
     vec4 botanical_overhead_light(vec2 uv, vec2 p) {
       vec2 lc2 = uv - vec2(0.5, 0.85);
       float light = 1.0 - smoothstep(0.0, 1.1, length(lc2*vec2(1.0,1.4)));
+      float dapple = fbm(p * 6.0, 4, 2.0, 0.5) * 0.5 + 0.5;
+      float mask = step(0.45, dapple);
+      light *= mix(0.55, 1.0, mask);
       return vec4(vec3(light), 0.5);
     }
 
@@ -546,7 +633,10 @@ const SHADERS = {
     vec4 molten_crust(vec2 uv, vec2 p) {
       float heat = molten_heat(p);
       float crust = 1.0 - smoothstep(0.08, 0.18, heat);
-      return vec4(vec3(0.0), crust * 0.85);
+      /* glowing seam right at the crust/lava boundary */
+      float seam = 1.0 - smoothstep(0.0, 0.05, abs(heat - 0.12));
+      vec3 col = mix(vec3(0.0), u_color2, seam * 0.7);
+      return vec4(clamp(col, 0.0, 1.0), clamp(crust * 0.85 + seam * 0.5, 0.0, 1.0));
     }
     vec4 molten_glow(vec2 uv, vec2 p) {
       float heat = molten_heat(p);
@@ -563,6 +653,14 @@ const SHADERS = {
       vec2 p = (uv - 0.5) * vec2(aspect, 1.0);
       p += vec2(sin(u_seed * 0.00713) * 12.3,
                 cos(u_seed * 0.00931) *  9.7);
+
+      /* composition bias: re-center on focal point, rotate, scale —
+         gives every mode a distinct focal point instead of dead-center noise */
+      vec2 focal = (vec2(u_focalX, u_focalY) - 0.5) * vec2(aspect, 1.0);
+      p -= focal * 0.6;
+      float cr = cos(u_rotation), sr = sin(u_rotation);
+      p = mat2(cr, -sr, sr, cr) * p;
+      p *= mix(1.0, 1.0 / max(u_scale, 0.001), 0.5);
 
       vec4 outc = vec4(0.0, 0.0, 0.0, 1.0);
 
@@ -758,6 +856,8 @@ const SHADERS = {
       }
 
       col = colorGrade(col);
+      col = col / (col + 0.5) * 1.5;
+      col = clamp(col, 0.0, 1.0);
 
       /* vignette */
       vec2 vc = uv - 0.5;

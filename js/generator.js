@@ -16,6 +16,24 @@ const Generator = (() => {
     return [((n>>16)&255)/255, ((n>>8)&255)/255, (n&255)/255];
   }
 
+  function lerp3(a, b, t) {
+    return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+  }
+
+  /* 4 palette stops -> 7 tones (lerp c0->c1, c1->c2, c2->c3) */
+  function expandPalette(colors) {
+    const [c0, c1, c2, c3] = colors;
+    return [
+      c0,
+      lerp3(c0, c1, 0.5),
+      c1,
+      lerp3(c1, c2, 0.5),
+      c2,
+      lerp3(c2, c3, 0.5),
+      c3,
+    ];
+  }
+
   /* Weighted aesthetic pick — weights must sum to 1.0 */
   const AESTHETIC_WEIGHTS = [
     { id: 'ethereal',   w: 0.15 },
@@ -40,11 +58,16 @@ const Generator = (() => {
     return AESTHETICS[AESTHETICS.length - 1];
   }
 
-  function pickPalette(aestheticId, rng) {
+  function pickPalette(aestheticId, rng, opts) {
+    const force = opts && opts.force;
     const aesthetic = AESTHETICS.find(a => a.id === aestheticId);
     const tags = AESTHETIC_PALETTE_MAP[aesthetic ? aesthetic.mode : 0] || [];
     const compatible = PALETTES.filter(p => p.tags.some(t => tags.includes(t)));
-    const pool = compatible.length ? compatible : PALETTES;
+    let pool = compatible.length ? compatible : PALETTES;
+    if (!force) {
+      const highContrast = pool.filter(p => !p.lowContrast);
+      if (highContrast.length) pool = highContrast;
+    }
     return pool[Math.floor(rng() * pool.length)];
   }
 
@@ -72,7 +95,7 @@ const Generator = (() => {
   function deriveLayerOpacities(aestheticId, rng) {
     const aesthetic = AESTHETICS.find(a => a.id === aestheticId);
     const layers = aesthetic ? aesthetic.layers : [];
-    return layers.map(l => Math.max(0.05, Math.min(1.0, l.opacity + (rng() - 0.5) * 0.2)));
+    return layers.map(l => Math.max(0.05, Math.min(1.0, l.opacity + (rng() - 0.5) * 0.56)));
   }
 
   /* seedInt: integer 0-999999 */
@@ -85,19 +108,24 @@ const Generator = (() => {
     const params         = pickParams(aesthetic.id, rng);
     const layerOpacities = deriveLayerOpacities(aesthetic.id, rng);
     const noiseOffset    = { x: rng() * 1000, y: rng() * 1000 };
+    const compositionBias = {
+      focalX:   0.2 + rng() * 0.6,
+      focalY:   0.2 + rng() * 0.6,
+      rotation: rng() * Math.PI * 2,
+      scale:    0.6 + rng() * 0.8,
+    };
 
+    const tones = expandPalette(paletteDef.colors).map(hexToVec3);
     const palette = {
-      color0: hexToVec3(paletteDef.colors[0]),
-      color1: hexToVec3(paletteDef.colors[1]),
-      color2: hexToVec3(paletteDef.colors[2]),
-      color3: hexToVec3(paletteDef.colors[3]),
+      color0: tones[0], color1: tones[2], color2: tones[4], color3: tones[6],
+      tones,
     };
 
     /* seed string for display / URL */
     const seed = `WF-${String(seedInt).padStart(6, '0')}`;
 
-    return { seedInt, seed, aesthetic, palette, paletteDef, params, layerOpacities, noiseOffset };
+    return { seedInt, seed, aesthetic, palette, paletteDef, params, layerOpacities, noiseOffset, compositionBias };
   }
 
-  return { pickAesthetic, pickPalette, pickParams, deriveLayerOpacities, generateWallpaper, hexToVec3, mulberry32 };
+  return { pickAesthetic, pickPalette, pickParams, deriveLayerOpacities, generateWallpaper, hexToVec3, expandPalette, mulberry32 };
 })();
