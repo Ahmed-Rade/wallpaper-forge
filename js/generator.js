@@ -36,16 +36,21 @@ const Generator = (() => {
 
   /* Weighted aesthetic pick — weights must sum to 1.0 */
   const AESTHETIC_WEIGHTS = [
-    { id: 'ethereal',   w: 0.15 },
-    { id: 'organic',    w: 0.15 },
-    { id: 'cosmic',     w: 0.12 },
-    { id: 'watercolor', w: 0.12 },
-    { id: 'molten',     w: 0.10 },
-    { id: 'botanical',  w: 0.10 },
-    { id: 'neonnoir',   w: 0.08 },
-    { id: 'arctic',     w: 0.08 },
-    { id: 'brutalist',  w: 0.06 },
-    { id: 'retrotech',  w: 0.04 },
+    { id: 'ethereal',    w: 0.10 },
+    { id: 'organic',     w: 0.10 },
+    { id: 'cosmic',      w: 0.09 },
+    { id: 'watercolor',  w: 0.09 },
+    { id: 'molten',      w: 0.08 },
+    { id: 'botanical',   w: 0.08 },
+    { id: 'neonnoir',    w: 0.07 },
+    { id: 'arctic',      w: 0.07 },
+    { id: 'crystalline', w: 0.09 },
+    { id: 'silk',        w: 0.08 },
+    { id: 'sacred',      w: 0.07 },
+    { id: 'glitch',      w: 0.05 },
+    { id: 'mycelium',    w: 0.06 },
+    { id: 'brutalist',   w: 0.04 },
+    { id: 'retrotech',   w: 0.03 },
   ];
 
   function pickAesthetic(rng) {
@@ -87,6 +92,11 @@ const Generator = (() => {
       case 7: return [4.0 + r()*3.0, 0.03 + r()*0.05, r(), 0.5 + r()*0.5];
       case 8: return [r(), 0.4 + r()*0.6, r(), 0.1 + r()*0.3];
       case 9: return [0.8 + r()*0.6, 0.3 + r()*0.2, 0.15 + r()*0.15, 0.5 + r()*0.4];
+      case 10: return [r(), r(), r(), r()]; // density/complexity/symmetry/colorShift driven by settings
+      case 11: return [r(), r(), r(), r()];
+      case 12: return [r(), r(), r(), r()];
+      case 13: return [r(), r(), r(), r()];
+      case 14: return [r(), r(), r(), r()];
       default: return [r(), r(), r(), r()];
     }
   }
@@ -121,10 +131,20 @@ const Generator = (() => {
       tones,
     };
 
+    /* Seed-driven base values for the new settings sliders */
+    const seedSettings = {
+      density:    0.3 + rng() * 0.5,   /* 0–1, default ~0.5 */
+      complexity: 0.3 + rng() * 0.6,   /* 0–1 */
+      symmetry:   Math.floor(rng() * 2.5), /* 0,1,2 (rarely 3 for sacred) */
+      colorShift: rng() * 0.25,         /* subtle by default */
+    };
+    /* Sacred geometry benefits from higher symmetry */
+    if (aesthetic.id === 'sacred') seedSettings.symmetry = Math.floor(rng() * 3) + 1;
+
     /* seed string for display / URL */
     const seed = `WF-${String(seedInt).padStart(6, '0')}`;
 
-    return { seedInt, seed, aesthetic, palette, paletteDef, params, layerOpacities, noiseOffset, compositionBias };
+    return { seedInt, seed, aesthetic, palette, paletteDef, params, layerOpacities, noiseOffset, compositionBias, seedSettings };
   }
 
   return { pickAesthetic, pickPalette, pickParams, deriveLayerOpacities, generateWallpaper, hexToVec3, expandPalette, mulberry32 };

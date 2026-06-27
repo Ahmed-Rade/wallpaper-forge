@@ -167,7 +167,8 @@ const Export = (() => {
     ['u_resolution','u_seed','u_time','u_mode','u_pass','u_params',
      'u_color0','u_color1','u_color2','u_color3','u_color4','u_color5','u_color6',
      'u_focalX','u_focalY','u_rotation','u_scale',
-     'u_warpOctaves','u_warpIters'].forEach(n => {
+     'u_warpOctaves','u_warpIters',
+     'u_density','u_complexity','u_symmetry','u_colorShift'].forEach(n => {
       uLoc[n] = gl.getUniformLocation(passProgram, n);
     });
     ['u_layer0','u_layer1','u_layer2','u_layerCount',
@@ -237,6 +238,11 @@ const Export = (() => {
       gl.uniform1f(uLoc['u_scale'],    cb.scale    !== undefined ? cb.scale    : 1.0);
       gl.uniform1i(uLoc['u_warpOctaves'], 6);
       gl.uniform1i(uLoc['u_warpIters'], 3);
+      const ss = spec.settings || spec.seedSettings || {};
+      gl.uniform1f(uLoc['u_density'],    ss.density    !== undefined ? ss.density    : 0.5);
+      gl.uniform1f(uLoc['u_complexity'], ss.complexity !== undefined ? ss.complexity : 0.5);
+      gl.uniform1f(uLoc['u_symmetry'],   ss.symmetry   !== undefined ? ss.symmetry   : 0.0);
+      gl.uniform1f(uLoc['u_colorShift'], ss.colorShift !== undefined ? ss.colorShift : 0.0);
 
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);

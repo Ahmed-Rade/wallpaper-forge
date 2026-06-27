@@ -109,6 +109,61 @@ const AESTHETICS = [
       { pass: 'glow',       blend: 'screen', opacity: 0.6 },
     ],
   },
+  {
+    id: 'crystalline',
+    name: 'Crystalline',
+    mode: 10,
+    compatiblePalettes: ['glacier', 'steelglass', 'arcticdawn', 'ultraviolet', 'plasma'],
+    layers: [
+      { pass: 'facet_fill',  blend: 'normal',   opacity: 1.0 },
+      { pass: 'facet_edges', blend: 'screen',    opacity: 0.7 },
+      { pass: 'specular',    blend: 'screen',    opacity: 0.9 },
+    ],
+  },
+  {
+    id: 'silk',
+    name: 'Fluid Silk',
+    mode: 11,
+    compatiblePalettes: ['dusklinen', 'ashplum', 'sagepaper', 'mothwing', 'pastel'],
+    layers: [
+      { pass: 'base_flow', blend: 'normal',    opacity: 1.0 },
+      { pass: 'ribbons',   blend: 'screen',    opacity: 0.8 },
+      { pass: 'sheen',     blend: 'soft_light', opacity: 0.6 },
+    ],
+  },
+  {
+    id: 'sacred',
+    name: 'Sacred Geometry',
+    mode: 12,
+    compatiblePalettes: ['obsidianflame', 'midnightindigo', 'voidbloom', 'deepcrimson', 'ultraviolet'],
+    layers: [
+      { pass: 'background_rings', blend: 'normal',       opacity: 1.0 },
+      { pass: 'star_lattice',     blend: 'screen',       opacity: 0.85 },
+      { pass: 'center_glow',      blend: 'screen',       opacity: 0.9 },
+    ],
+  },
+  {
+    id: 'glitch',
+    name: 'Glitch',
+    mode: 13,
+    compatiblePalettes: ['acidrain', 'neonsunset', 'reactorcore', 'plasma', 'voidbloom'],
+    layers: [
+      { pass: 'slice_base',      blend: 'normal',   opacity: 1.0 },
+      { pass: 'block_glitch',    blend: 'screen',   opacity: 0.75 },
+      { pass: 'scanlines_color', blend: 'overlay',  opacity: 0.4 },
+    ],
+  },
+  {
+    id: 'mycelium',
+    name: 'Mycelium',
+    mode: 14,
+    compatiblePalettes: ['forestfloor', 'stonemoss', 'crypt', 'tarpit', 'sagepaper'],
+    layers: [
+      { pass: 'substrate', blend: 'normal',    opacity: 1.0 },
+      { pass: 'network',   blend: 'screen',    opacity: 0.9 },
+      { pass: 'spores',    blend: 'screen',    opacity: 0.8 },
+    ],
+  },
 ];
 
 /* ════════════════════════════════════════
@@ -155,6 +210,16 @@ const PALETTES = [
   { id:'arcticdawn',     name:'Arctic Dawn',     colors:['#dce8ee','#aac4d2','#6f95ac','#283c48'], tags:['cool','clean'] },
   { id:'steelglass',     name:'Steel Glass',     colors:['#10141a','#3a4a58','#7c9aac','#dce8ee'], tags:['cool','clean','dark'] },
   { id:'glacier',        name:'Glacier',         colors:['#eef6f8','#bfe0e8','#7cb8cc','#2c5468'], tags:['cool','clean'] },
+
+  /* ── NEW ADDITIONS (8) ── */
+  { id:'prismatic',      name:'Prismatic',        colors:['#05030f','#2d0f4a','#7a2ab8','#f0c0ff'], tags:['vibrant','dark','cool'] },
+  { id:'infrared',       name:'Infrared',         colors:['#0a0000','#5a0020','#ff1455','#ffb0c8'], tags:['vibrant','warm','dark'] },
+  { id:'duskgold',       name:'Dusk Gold',        colors:['#1a0f00','#6a4400','#d4900a','#ffeaa0'], tags:['warm','vibrant','earthy'] },
+  { id:'mintchrome',     name:'Mint Chrome',      colors:['#02100e','#0a3830','#1acc98','#b8fff0'], tags:['vibrant','cool','dark'] },
+  { id:'violetmist',     name:'Violet Mist',      colors:['#1e1028','#5a3d7a','#a888cc','#f0e4ff'], tags:['soft','cool','muted'] },
+  { id:'cinnabar',       name:'Cinnabar',         colors:['#1e0800','#7a2000','#d45020','#ffd0a0'], tags:['warm','earthy','vibrant'] },
+  { id:'hailstone',      name:'Hailstone',        colors:['#10141c','#304060','#80a8c8','#e8f4ff'], tags:['cool','clean','dark'] },
+  { id:'undergrowth',    name:'Undergrowth',      colors:['#060a04','#1a3010','#4a7830','#a0d060'], tags:['dark','earthy','vibrant'] },
 ];
 
 /* ════════════════════════════════════════
@@ -175,14 +240,19 @@ PALETTES.forEach(p => {
 });
 
 const AESTHETIC_PALETTE_MAP = {
-  0: ['dark', 'vibrant', 'cool'],           // Ethereal
-  1: ['dark', 'muted', 'clean', 'earthy'],  // Brutalist
-  2: ['earthy', 'muted', 'warm'],           // Organic
-  3: ['vibrant', 'dark', 'cool'],           // Retro Tech
-  4: ['dark', 'vibrant', 'cool'],           // Cosmic
-  5: ['soft', 'warm', 'earthy'],            // Watercolor
-  6: ['dark', 'vibrant'],                   // Neon Noir (only)
-  7: ['cool', 'clean', 'muted'],            // Arctic
-  8: ['earthy', 'vibrant', 'warm', 'dark'], // Botanical
-  9: ['warm', 'dark', 'vibrant'],           // Molten
+  0:  ['dark', 'vibrant', 'cool'],           // Ethereal
+  1:  ['dark', 'muted', 'clean', 'earthy'],  // Brutalist
+  2:  ['earthy', 'muted', 'warm'],           // Organic
+  3:  ['vibrant', 'dark', 'cool'],           // Retro Tech
+  4:  ['dark', 'vibrant', 'cool'],           // Cosmic
+  5:  ['soft', 'warm', 'earthy'],            // Watercolor
+  6:  ['dark', 'vibrant'],                   // Neon Noir (only)
+  7:  ['cool', 'clean', 'muted'],            // Arctic
+  8:  ['earthy', 'vibrant', 'warm', 'dark'], // Botanical
+  9:  ['warm', 'dark', 'vibrant'],           // Molten
+  10: ['cool', 'vibrant', 'dark'],           // Crystalline
+  11: ['soft', 'muted', 'warm'],             // Fluid Silk
+  12: ['dark', 'vibrant', 'cool'],           // Sacred Geometry
+  13: ['vibrant', 'dark'],                   // Glitch
+  14: ['dark', 'earthy', 'muted'],           // Mycelium
 };

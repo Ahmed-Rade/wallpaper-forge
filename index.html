@@ -101,7 +101,46 @@
         <button class="mode-pill" data-mode="arctic">Arctic</button>
         <button class="mode-pill" data-mode="brutalist">Brutalist</button>
         <button class="mode-pill" data-mode="retrotech">Retro Tech</button>
+        <button class="mode-pill" data-mode="crystalline">Crystalline</button>
+        <button class="mode-pill" data-mode="silk">Fluid Silk</button>
+        <button class="mode-pill" data-mode="sacred">Sacred Geo</button>
+        <button class="mode-pill" data-mode="glitch">Glitch</button>
+        <button class="mode-pill" data-mode="mycelium">Mycelium</button>
       </div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Density
+        <span class="slider-value" id="densityVal"></span>
+        <button class="slider-reset" data-slider="density" title="Reset to seed value">↺</button>
+      </div>
+      <input type="range" class="cfg-slider" id="densitySlider" min="0" max="100" step="1">
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Complexity
+        <span class="slider-value" id="complexityVal"></span>
+        <button class="slider-reset" data-slider="complexity" title="Reset to seed value">↺</button>
+      </div>
+      <input type="range" class="cfg-slider" id="complexitySlider" min="0" max="100" step="1">
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Symmetry</div>
+      <div class="seg" id="symmetrySeg">
+        <button data-sym="0" class="active">None</button>
+        <button data-sym="1">Mirror</button>
+        <button data-sym="2">4-Fold</button>
+        <button data-sym="3">6-Fold</button>
+      </div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Color Shift
+        <span class="slider-value" id="colorShiftVal"></span>
+        <button class="slider-reset" data-slider="colorShift" title="Reset to seed value">↺</button>
+      </div>
+      <input type="range" class="cfg-slider" id="colorShiftSlider" min="0" max="100" step="1">
     </div>
   </div>
 </div>

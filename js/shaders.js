@@ -39,6 +39,10 @@ const SHADERS = {
     uniform float u_scale;
     uniform int   u_warpOctaves;  /* quality knob: 6 desktop / 4 mobile */
     uniform int   u_warpIters;    /* domain-warp iterations: 3 desktop / 2 mobile */
+    uniform float u_density;      /* 0.0-1.0: element density/count multiplier */
+    uniform float u_complexity;   /* 0.0-1.0: detail/subdivision level */
+    uniform float u_symmetry;     /* 0.0=none, 1.0=mirror, 2.0=4-fold, 3.0=6-fold */
+    uniform float u_colorShift;   /* 0.0-1.0: hue rotation / palette interpolation */
 
     /* ════════════════════════════════════════
        NOISE CORE
@@ -645,6 +649,394 @@ const SHADERS = {
     }
 
     /* ════════════════════════════════════════
+       SYMMETRY HELPER — folds p according to u_symmetry
+       0=none, 1=mirror-x, 2=4-fold, 3=6-fold
+    ════════════════════════════════════════ */
+    vec2 applySymmetry(vec2 p) {
+      if (u_symmetry < 0.5) return p;
+      if (u_symmetry < 1.5) {
+        /* mirror x */
+        p.x = abs(p.x);
+        return p;
+      }
+      if (u_symmetry < 2.5) {
+        /* 4-fold: fold into first octant then replicate */
+        p = abs(p);
+        if (p.x < p.y) { float t = p.x; p.x = p.y; p.y = t; }
+        return p;
+      }
+      /* 6-fold: fold into 60-degree sector */
+      float a = atan(p.y, p.x);
+      float r = length(p);
+      a = mod(a, 3.14159265 / 3.0);
+      if (a > 3.14159265 / 6.0) a = 3.14159265 / 3.0 - a;
+      return vec2(cos(a), sin(a)) * r;
+    }
+
+    /* HSV shift utility */
+    vec3 hueShift(vec3 col, float shift) {
+      float h = mod(atan(col.g - col.b, col.r - col.b) + shift * 6.2832, 6.2832);
+      float s = length(vec2(col.r - col.b, col.g - col.b));
+      float v = max(col.r, max(col.g, col.b));
+      /* approximate HSV→RGB */
+      vec3 k = vec3(1.0, 2.0/3.0, 1.0/3.0);
+      vec3 rgb = clamp(abs(fract(h/6.2832 + k) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+      return v * mix(vec3(1.0), rgb, s / max(v, 0.001));
+    }
+
+    /* ════════════════════════════════════════
+       MODE 10 — CRYSTALLINE
+       Voronoi-based faceted gem structure.
+       pass0: facet_fill, pass1: facet_edges, pass2: specular
+    ════════════════════════════════════════ */
+    void crystalline_voronoi(vec2 p, out float minD1, out float minD2, out vec2 cell1, out vec2 cell2) {
+      float scale = 3.0 + u_density * 6.0;
+      vec2 gp = applySymmetry(p) * scale;
+      vec2 gi = floor(gp);
+      minD1 = 99.0; minD2 = 99.0;
+      for (int y=-2;y<=2;y++) for (int x=-2;x<=2;x++) {
+        vec2 nb = gi + vec2(float(x),float(y));
+        vec2 pt = nb + hash2(nb) - gp;
+        float d = dot(pt,pt);
+        if (d < minD1) { minD2=minD1; cell2=cell1; minD1=d; cell1=nb; }
+        else if (d < minD2) { minD2=d; cell2=nb; }
+      }
+    }
+    vec4 crystalline_facet_fill(vec2 uv, vec2 p) {
+      float minD1, minD2; vec2 c1 = vec2(0.0), c2 = vec2(0.0);
+      crystalline_voronoi(p, minD1, minD2, c1, c2);
+      float h1 = hash(c1 + vec2(3.1, 7.4));
+      float h2 = hash(c1 + vec2(9.1, 2.8));
+      /* pick from 7 palette tones */
+      vec3 tones[7];
+      tones[0]=u_color0; tones[1]=u_color4; tones[2]=u_color1;
+      tones[3]=u_color5; tones[4]=u_color2; tones[5]=u_color6; tones[6]=u_color3;
+      int ti = int(floor(h1 * 7.0));
+      vec3 base = tones[0];
+      for (int i=0;i<6;i++) if (i==ti) base = mix(tones[i], tones[i+1], fract(h1*7.0));
+      /* angle-dependent facet shading */
+      vec2 dir = normalize(c2 - c1);
+      float angle = atan(dir.y, dir.x);
+      float facetLight = 0.55 + 0.45 * sin(angle * 2.0 + hash(c1)*6.28);
+      /* depth-from-edge shading */
+      float edgeDist = (sqrt(minD2) - sqrt(minD1));
+      float depthShade = 1.0 - smoothstep(0.0, 0.2, edgeDist) * 0.35;
+      vec3 col = base * facetLight * depthShade;
+      col = hueShift(col, u_colorShift);
+      return vec4(clamp(col,0.0,1.0),1.0);
+    }
+    vec4 crystalline_facet_edges(vec2 uv, vec2 p) {
+      float minD1, minD2; vec2 c1=vec2(0.0), c2=vec2(0.0);
+      crystalline_voronoi(p, minD1, minD2, c1, c2);
+      float edge = sqrt(minD2) - sqrt(minD1);
+      float w = fwidth(edge) * 1.5 + 0.002;
+      float lineW = 0.01 + u_complexity * 0.03;
+      float edgeMask = 1.0 - smoothstep(0.0, w + lineW, edge);
+      /* Thin bright inner highlight, darker outer shadow */
+      float highlight = 1.0 - smoothstep(0.0, w * 0.5, edge);
+      vec3 col = mix(u_color1 * 0.3, u_color3 * 1.2, highlight);
+      col = hueShift(col, u_colorShift);
+      return vec4(col, edgeMask * 0.9);
+    }
+    vec4 crystalline_specular(vec2 uv, vec2 p) {
+      float minD1, minD2; vec2 c1=vec2(0.0), c2=vec2(0.0);
+      crystalline_voronoi(p, minD1, minD2, c1, c2);
+      float h = hash(c1 + vec2(1.7,5.3));
+      /* only some facets get a specular hotspot */
+      float spec = 0.0;
+      if (h > 0.55) {
+        vec2 facetCenter = c1 / (3.0 + u_density * 6.0);
+        float dist = length(applySymmetry(p) - facetCenter);
+        spec = exp(-dist * dist * (20.0 + u_complexity * 40.0)) * (h - 0.55) * 2.5;
+      }
+      vec3 col = hueShift(u_color3, u_colorShift) * spec;
+      return vec4(clamp(col,0.0,1.0), clamp(spec * 0.8, 0.0, 1.0));
+    }
+
+    /* ════════════════════════════════════════
+       MODE 11 — FLUID SILK
+       Smooth curling ribbons via layered domain warp.
+       pass0: base_flow, pass1: ribbons, pass2: sheen
+    ════════════════════════════════════════ */
+    vec4 silk_base_flow(vec2 uv, vec2 p) {
+      vec2 sp = applySymmetry(p);
+      float freq = 0.6 + u_density * 1.2;
+      float w1 = warp(sp * freq + vec2(0.5, 1.3));
+      float w2 = fbm(sp * freq * 1.4 + vec2(3.1, 7.4), iMin(4,u_warpOctaves), 2.1, 0.5);
+      float t = w1 * 0.5 + 0.5;
+      float t2 = w2 * 0.5 + 0.5;
+      vec3 col = mix(u_color0, u_color1, t * 0.6);
+      col = mix(col, u_color2, t2 * 0.35);
+      col = hueShift(col, u_colorShift);
+      return vec4(clamp(col,0.0,1.0),1.0);
+    }
+    vec4 silk_ribbons(vec2 uv, vec2 p) {
+      vec2 sp = applySymmetry(p);
+      float freq = 1.0 + u_density * 3.0;
+      int ribbonCount = 3 + int(u_density * 5.0);
+      vec3 col = vec3(0.0);
+      float alpha = 0.0;
+      float detail = 2.0 + u_complexity * 4.0;
+      for (int i = 0; i < 8; i++) {
+        if (i >= ribbonCount) break;
+        float fi = float(i);
+        vec2 off = vec2(fi * 1.37, fi * 2.71);
+        float flow = fbm(sp * freq + off, iMin(5,u_warpOctaves), 2.0, 0.48) * 0.5 + 0.5;
+        float flow2 = fbm(sp * freq * detail + off * 1.5, iMin(3,u_warpOctaves), 2.0, 0.5) * 0.5 + 0.5;
+        float ribbon = smoothstep(0.40, 0.55, flow) * smoothstep(0.75, 0.55, flow);
+        ribbon *= (0.6 + 0.4 * flow2);
+        float t = fi / float(ribbonCount);
+        vec3 rc = mix(u_color1, u_color3, t);
+        rc = hueShift(rc, u_colorShift + t * 0.15);
+        col += rc * ribbon;
+        alpha = max(alpha, ribbon);
+      }
+      return vec4(clamp(col,0.0,1.0), clamp(alpha*0.85,0.0,1.0));
+    }
+    vec4 silk_sheen(vec2 uv, vec2 p) {
+      vec2 sp = applySymmetry(p);
+      /* anisotropic sheen along flow direction */
+      float freq = 0.8 + u_density;
+      vec2 grad = vec2(
+        fbm(sp * freq + vec2(0.1,0.0), 3, 2.0, 0.5) - fbm(sp * freq - vec2(0.1,0.0), 3, 2.0, 0.5),
+        fbm(sp * freq + vec2(0.0,0.1), 3, 2.0, 0.5) - fbm(sp * freq - vec2(0.0,0.1), 3, 2.0, 0.5)
+      );
+      float flow = length(grad);
+      float sheen = pow(clamp(flow * 3.0, 0.0, 1.0), 2.0) * 0.6;
+      vec3 col = hueShift(u_color3, u_colorShift) * sheen;
+      return vec4(col, sheen * 0.5);
+    }
+
+    /* ════════════════════════════════════════
+       MODE 12 — SACRED GEOMETRY
+       Layered geometric mandalas: rings, polygons, stars.
+       pass0: background_rings, pass1: star_lattice, pass2: center_glow
+    ════════════════════════════════════════ */
+    float sdRegularPolygon(vec2 p, float r, int n) {
+      float an = 6.2832 / float(n);
+      float a = atan(p.y, p.x) + an * 0.5;
+      float bn = an * floor(a / an);
+      vec2 q = mat2(cos(bn),-sin(bn),sin(bn),cos(bn)) * p;
+      return length(q - vec2(r, 0.0)) - r * tan(3.14159265 / float(n));
+    }
+    vec4 sacred_background_rings(vec2 uv, vec2 p) {
+      vec2 sp = applySymmetry(p);
+      float ringCount = 4.0 + u_density * 6.0;
+      float ringWidth = 0.012 + (1.0 - u_complexity) * 0.02;
+      float r = length(sp);
+      float rings = 0.0;
+      for (int i = 1; i <= 10; i++) {
+        float fi = float(i);
+        if (fi > ringCount) break;
+        float rr = fi * 0.15;
+        float d = abs(r - rr);
+        float w = fwidth(d) * 1.5 + ringWidth;
+        rings += 1.0 - smoothstep(0.0, w, d);
+      }
+      rings = clamp(rings, 0.0, 1.0);
+      /* rotating polygon grid */
+      int sides = 3 + int(u_complexity * 4.0);
+      float rot = hash(vec2(u_seed * 0.0001, 1.0)) * 6.28;
+      float ca = cos(rot), sa = sin(rot);
+      vec2 rp = mat2(ca,-sa,sa,ca) * sp;
+      float polyDist = sdRegularPolygon(rp, 0.5, sides);
+      float polyMask = 1.0 - smoothstep(0.0, 0.015, abs(polyDist));
+      vec3 col = mix(u_color0, u_color1, rings * 0.7);
+      col = mix(col, u_color2, polyMask * 0.6);
+      col = hueShift(col, u_colorShift);
+      return vec4(clamp(col,0.0,1.0), 1.0);
+    }
+    vec4 sacred_star_lattice(vec2 uv, vec2 p) {
+      vec2 sp = applySymmetry(p);
+      float r = length(sp);
+      float a = atan(sp.y, sp.x);
+      float petals = 6.0 + u_density * 6.0;
+      float starPat = 0.5 + 0.5 * cos(a * petals + hash(vec2(u_seed*0.001, 3.0)) * 6.28);
+      starPat = pow(starPat, 2.0 + u_complexity * 3.0);
+      /* nested star layers */
+      float totalStar = 0.0;
+      for (int i = 1; i <= 4; i++) {
+        float fi = float(i);
+        float layerR = fi * 0.2;
+        float ring = exp(-pow(r - layerR, 2.0) * 80.0);
+        float petals2 = petals * fi;
+        float sp2 = 0.5 + 0.5 * cos(a * petals2);
+        totalStar += ring * pow(sp2, 3.0);
+      }
+      totalStar = clamp(totalStar, 0.0, 1.0);
+      /* flower of life circles */
+      float fol = 0.0;
+      for (int i = 0; i < 6; i++) {
+        float ang = float(i) * 6.2832 / 6.0;
+        vec2 cp = vec2(cos(ang), sin(ang)) * 0.3;
+        float cd = abs(length(sp - cp) - 0.3);
+        fol += 1.0 - smoothstep(0.0, 0.015, cd);
+      }
+      fol = clamp(fol, 0.0, 1.0);
+      vec3 col = hueShift(u_color2, u_colorShift) * totalStar + hueShift(u_color1, u_colorShift * 0.5) * fol * 0.7;
+      float alpha = clamp(totalStar + fol * 0.7, 0.0, 1.0);
+      return vec4(clamp(col,0.0,1.0), alpha);
+    }
+    vec4 sacred_center_glow(vec2 uv, vec2 p) {
+      vec2 sp = applySymmetry(p);
+      float r = length(sp);
+      float glow = exp(-r * r * (4.0 + u_density * 4.0));
+      /* radial spokes */
+      float a = atan(sp.y, sp.x);
+      float spokes = floor(6.0 + u_density * 6.0);
+      float spoke = pow(0.5 + 0.5 * cos(a * spokes), 8.0 + u_complexity * 12.0);
+      float spokeFall = exp(-r * (3.0 + u_density * 3.0));
+      float combined = glow * 0.8 + spoke * spokeFall * 0.6;
+      vec3 col = hueShift(u_color3, u_colorShift) * combined;
+      return vec4(clamp(col,0.0,1.0), clamp(combined, 0.0, 1.0));
+    }
+
+    /* ════════════════════════════════════════
+       MODE 13 — GLITCH
+       Datamosh-style: horizontal slices, pixel drift, chromatic block artifacts.
+       pass0: slice_base, pass1: block_glitch, pass2: scanlines_color
+    ════════════════════════════════════════ */
+    vec4 glitch_slice_base(vec2 uv, vec2 p) {
+      /* Slice rows with different horizontal offsets */
+      float sliceH = 0.02 + (1.0 - u_density) * 0.1;
+      float sliceIdx = floor(uv.y / sliceH);
+      float sliceNoise = hash(vec2(sliceIdx, u_seed * 0.001));
+      float offset = 0.0;
+      if (sliceNoise > 0.6) {
+        offset = (sliceNoise - 0.6) * u_density * 0.25 * (sliceNoise > 0.85 ? 4.0 : 1.0);
+      }
+      float sampleX = fract(uv.x + offset);
+      vec2 sp = vec2(sampleX, uv.y) - 0.5;
+      sp.x *= u_resolution.x / u_resolution.y;
+      float n = warp(sp * (0.8 + u_complexity * 1.2));
+      float t = n * 0.5 + 0.5;
+      vec3 col = mix(u_color0, mix(u_color1, u_color2, t * 1.5), t);
+      col = hueShift(col, u_colorShift + sliceNoise * 0.3);
+      return vec4(clamp(col,0.0,1.0),1.0);
+    }
+    vec4 glitch_block_glitch(vec2 uv, vec2 p) {
+      float blockW = 0.04 + (1.0 - u_complexity) * 0.12;
+      float blockH = 0.015 + (1.0 - u_complexity) * 0.04;
+      vec2 blockId = floor(uv / vec2(blockW, blockH));
+      float bn = hash(blockId + vec2(u_seed * 0.0007, 3.0));
+      vec3 col = vec3(0.0);
+      float alpha = 0.0;
+      if (bn > 0.7) {
+        /* Color block artifact */
+        float intensity = (bn - 0.7) / 0.3;
+        float colorChoice = hash(blockId + vec2(u_seed * 0.0013, 7.0));
+        vec3 glitchCol = colorChoice < 0.33
+          ? u_color1
+          : (colorChoice < 0.66 ? u_color2 : u_color3);
+        glitchCol = hueShift(glitchCol, u_colorShift);
+        /* pixel drift: offset the block */
+        float driftX = (hash(blockId + vec2(11.3, 0.0)) - 0.5) * 0.08 * u_density;
+        vec2 driftUV = fract(uv + vec2(driftX, 0.0));
+        float blockMask = step(fract((driftUV.x - blockId.x * blockW) / blockW), 1.0)
+                        * step(fract((driftUV.y - blockId.y * blockH) / blockH), 1.0);
+        col = glitchCol * intensity;
+        alpha = intensity * 0.75 * u_density;
+      }
+      return vec4(clamp(col,0.0,1.0), clamp(alpha,0.0,1.0));
+    }
+    vec4 glitch_scanlines_color(vec2 uv, vec2 p) {
+      /* RGB channel split scanlines */
+      float scanFreq = 1.5 + u_density * 3.0;
+      float scan = 0.5 + 0.5 * sin(uv.y * u_resolution.y * scanFreq);
+      float scanLine = smoothstep(0.35, 0.65, scan);
+      /* Horizontal noise bars */
+      float barN = hash(vec2(floor(uv.y * 80.0), u_seed * 0.001));
+      float barMask = step(0.88, barN) * (barN - 0.88) / 0.12;
+      /* RGB fringe on scanlines */
+      float rOff = u_density * 0.006;
+      vec3 col = vec3(
+        mix(1.0, 1.0 + rOff, scanLine),
+        1.0,
+        mix(1.0, 1.0 - rOff, scanLine)
+      ) * (1.0 - barMask * 0.5);
+      vec3 barCol = hueShift(u_color1, u_colorShift) * barMask;
+      col = mix(col, barCol * 2.0, barMask * 0.6);
+      return vec4(clamp(col,0.0,1.0), 0.3 + barMask * 0.6);
+    }
+
+    /* ════════════════════════════════════════
+       MODE 14 — MYCELIUM
+       Branching network of filaments + spore nodes.
+       pass0: substrate, pass1: network, pass2: spores
+    ════════════════════════════════════════ */
+    vec4 mycelium_substrate(vec2 uv, vec2 p) {
+      vec2 sp = applySymmetry(p);
+      float soil = warp(sp * (0.6 + u_complexity * 0.8));
+      float soil2 = fbm(sp * 1.8, iMin(4, u_warpOctaves), 2.0, 0.55) * 0.5 + 0.5;
+      float t = clamp(soil * 0.5 + 0.5, 0.0, 1.0);
+      vec3 col = mix(u_color0, mix(u_color0 * 1.3, u_color1 * 0.35, soil2), t * 0.6);
+      col = hueShift(col, u_colorShift);
+      return vec4(clamp(col,0.0,1.0),1.0);
+    }
+    vec4 mycelium_network(vec2 uv, vec2 p) {
+      vec2 sp = applySymmetry(p);
+      /* Use domain-warped Voronoi edges as the filament network */
+      float nodeCount = 3.0 + u_density * 8.0;
+      vec3 col = vec3(0.0);
+      float alpha = 0.0;
+      float filW = 0.006 + u_complexity * 0.01;
+      /* For each pair of nearby nodes, draw a filament segment */
+      for (int i = 0; i < 8; i++) {
+        float fi = float(i);
+        vec2 na = hash2(vec2(fi, u_seed * 0.001)) * 2.0 - 1.0;
+        na *= u_resolution.x / u_resolution.y;
+        for (int j = 0; j < 8; j++) {
+          if (j <= i) continue;
+          float fj = float(j);
+          vec2 nb = hash2(vec2(fj + 17.3, u_seed * 0.001)) * 2.0 - 1.0;
+          nb *= u_resolution.x / u_resolution.y;
+          float dist = length(na - nb);
+          if (dist > 1.2 + u_density * 0.8) continue;
+          /* Distance from sp to segment na→nb */
+          vec2 ba = nb - na;
+          float t2 = clamp(dot(sp - na, ba) / (dot(ba,ba) + 0.0001), 0.0, 1.0);
+          float segDist = length(sp - (na + t2 * ba));
+          /* Warp the filament slightly */
+          float wn = fbm(sp * 3.0 + vec2(fi * 1.37, fj * 2.71), 3, 2.0, 0.5) * 0.05;
+          segDist += wn;
+          float filament = 1.0 - smoothstep(filW * 0.5, filW * 2.5, segDist);
+          float bright = hash(vec2(fi * 3.17, fj + u_seed * 0.001));
+          vec3 fc = mix(u_color1 * 0.5, u_color2, bright);
+          fc = hueShift(fc, u_colorShift + bright * 0.2);
+          col += fc * filament;
+          alpha = max(alpha, filament * 0.9);
+        }
+      }
+      return vec4(clamp(col,0.0,1.0), clamp(alpha,0.0,1.0));
+    }
+    vec4 mycelium_spores(vec2 uv, vec2 p) {
+      vec2 sp = applySymmetry(p);
+      vec3 col = vec3(0.0);
+      float alpha = 0.0;
+      float aspect = u_resolution.x / u_resolution.y;
+      int sporeCount = 5 + int(u_density * 12.0);
+      for (int i = 0; i < 17; i++) {
+        if (i >= sporeCount) break;
+        float fi = float(i);
+        vec2 spos = hash2(vec2(fi * 7.13 + u_seed * 0.0013, fi * 3.97)) * 2.0 - 1.0;
+        spos *= vec2(aspect, 1.0);
+        float radius = 0.02 + hash(vec2(fi * 2.11, u_seed * 0.001)) * 0.05 * (1.0 + u_complexity);
+        float d = length(sp - spos);
+        /* inner spore disc */
+        float disc = 1.0 - smoothstep(radius * 0.5, radius, d);
+        /* glow halo */
+        float halo = exp(-d * d / (radius * radius * 4.0)) * 0.5;
+        float sporeGlow = disc + halo;
+        float t = hash(vec2(fi + 5.3, u_seed * 0.001));
+        vec3 sc = mix(u_color2, u_color3, t);
+        sc = hueShift(sc, u_colorShift);
+        col += sc * sporeGlow;
+        alpha = max(alpha, clamp(sporeGlow, 0.0, 1.0));
+      }
+      return vec4(clamp(col,0.0,1.0), clamp(alpha,0.0,1.0));
+    }
+
+    /* ════════════════════════════════════════
        MAIN — dispatch to (mode, pass)
     ════════════════════════════════════════ */
     void main() {
@@ -704,6 +1096,26 @@ const SHADERS = {
         if (u_pass == 0) outc = molten_heat_field(uv, p);
         else if (u_pass == 1) outc = molten_crust(uv, p);
         else outc = molten_glow(uv, p);
+      } else if (u_mode == 10) {
+        if (u_pass == 0) outc = crystalline_facet_fill(uv, p);
+        else if (u_pass == 1) outc = crystalline_facet_edges(uv, p);
+        else outc = crystalline_specular(uv, p);
+      } else if (u_mode == 11) {
+        if (u_pass == 0) outc = silk_base_flow(uv, p);
+        else if (u_pass == 1) outc = silk_ribbons(uv, p);
+        else outc = silk_sheen(uv, p);
+      } else if (u_mode == 12) {
+        if (u_pass == 0) outc = sacred_background_rings(uv, p);
+        else if (u_pass == 1) outc = sacred_star_lattice(uv, p);
+        else outc = sacred_center_glow(uv, p);
+      } else if (u_mode == 13) {
+        if (u_pass == 0) outc = glitch_slice_base(uv, p);
+        else if (u_pass == 1) outc = glitch_block_glitch(uv, p);
+        else outc = glitch_scanlines_color(uv, p);
+      } else if (u_mode == 14) {
+        if (u_pass == 0) outc = mycelium_substrate(uv, p);
+        else if (u_pass == 1) outc = mycelium_network(uv, p);
+        else outc = mycelium_spores(uv, p);
       } else {
         outc = vec4(mix(u_color0, u_color1, warp(p)*0.5+0.5), 1.0);
       }

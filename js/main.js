@@ -19,21 +19,57 @@
 
   /* Signature color per aesthetic mode for the lock dot */
   const MODE_COLORS = {
-    ethereal:   '#9b8ce0',
-    brutalist:  '#c4401f',
-    organic:    '#3f5c2a',
-    retrotech:  '#3df54a',
-    cosmic:     '#4a3fa0',
-    watercolor: '#c9a8a0',
-    neonnoir:   '#ff2e9e',
-    arctic:     '#7cb8cc',
-    botanical:  '#7d9b4e',
-    molten:     '#e0941e',
+    ethereal:    '#9b8ce0',
+    brutalist:   '#c4401f',
+    organic:     '#3f5c2a',
+    retrotech:   '#3df54a',
+    cosmic:      '#4a3fa0',
+    watercolor:  '#c9a8a0',
+    neonnoir:    '#ff2e9e',
+    arctic:      '#7cb8cc',
+    botanical:   '#7d9b4e',
+    molten:      '#e0941e',
+    crystalline: '#7cb8cc',
+    silk:        '#d4b8cc',
+    sacred:      '#9b3fff',
+    glitch:      '#3df54a',
+    mycelium:    '#4a7830',
   };
+
+  /* Live override settings (from sliders, applied on top of seedSettings) */
+  const settingsOverride = {
+    density:    null,  /* null = use seedSettings value */
+    complexity: null,
+    symmetry:   null,
+    colorShift: null,
+  };
+
+  function getEffectiveSettings() {
+    const seed = (state.spec && state.spec.seedSettings) || {};
+    return {
+      density:    settingsOverride.density    !== null ? settingsOverride.density    : (seed.density    || 0.5),
+      complexity: settingsOverride.complexity !== null ? settingsOverride.complexity : (seed.complexity || 0.5),
+      symmetry:   settingsOverride.symmetry   !== null ? settingsOverride.symmetry   : (seed.symmetry   || 0),
+      colorShift: settingsOverride.colorShift !== null ? settingsOverride.colorShift : (seed.colorShift || 0),
+    };
+  }
 
   const MAX_HISTORY = 20;
 
-  /* ── Device quality tier ── */
+  /* Sync sliders UI to current effective settings — called after each seed load */
+  function syncSlidersToSpec() {
+    const s = getEffectiveSettings();
+    const ds = document.getElementById('densitySlider');
+    const cs = document.getElementById('complexitySlider');
+    const ks = document.getElementById('colorShiftSlider');
+    if (ds) { ds.value = Math.round(s.density * 100); const dv = document.getElementById('densityVal'); if (dv) dv.textContent = Math.round(s.density * 100) + '%'; }
+    if (cs) { cs.value = Math.round(s.complexity * 100); const cv = document.getElementById('complexityVal'); if (cv) cv.textContent = Math.round(s.complexity * 100) + '%'; }
+    if (ks) { ks.value = Math.round(s.colorShift * 100); const kv = document.getElementById('colorShiftVal'); if (kv) kv.textContent = Math.round(s.colorShift * 100) + '%'; }
+    const sym = s.symmetry;
+    document.querySelectorAll('#symmetrySeg button').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.sym, 10) === sym);
+    });
+  }
   function isMobileDevice() {
     if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
       return navigator.userAgentData.mobile;
@@ -152,6 +188,8 @@
       const lockedAesthetic = AESTHETICS.find(a => a.id === state.lockedMode);
       if (lockedAesthetic) spec.aesthetic = lockedAesthetic;
     }
+    /* Merge live settings overrides */
+    spec.settings = getEffectiveSettings();
     state.spec = spec;
 
     const tag = `WF-${String(seedInt).padStart(6, '0')}`;
@@ -162,6 +200,8 @@
     updateBackBtn();
     Renderer.render(state.spec);
     renderNeighborStrip(seedInt);
+    /* Sync sliders to new seed's base values (respects overrides) */
+    if (typeof syncSlidersToSpec === 'function') syncSlidersToSpec();
 
     if (!hasRenderedOnce) {
       hasRenderedOnce = true;
@@ -190,6 +230,7 @@
       const lockedAesthetic = AESTHETICS.find(a => a.id === state.lockedMode);
       if (lockedAesthetic) spec.aesthetic = lockedAesthetic;
     }
+    spec.settings = getEffectiveSettings();
     return spec;
   }
 
@@ -555,6 +596,60 @@
       if (!pill) return;
       const mode = pill.dataset.mode;
       setLockedMode(mode === 'auto' ? null : mode);
+    });
+
+    /* Settings sliders */
+    function applySettingAndRender() {
+      if (state.spec) {
+        state.spec.settings = getEffectiveSettings();
+        Renderer.render(state.spec);
+      }
+    }
+
+    const densitySlider = document.getElementById('densitySlider');
+    const complexitySlider = document.getElementById('complexitySlider');
+    const colorShiftSlider = document.getElementById('colorShiftSlider');
+
+    if (densitySlider) {
+      densitySlider.addEventListener('input', e => {
+        settingsOverride.density = parseInt(e.target.value, 10) / 100;
+        document.getElementById('densityVal').textContent = e.target.value + '%';
+        applySettingAndRender();
+      });
+    }
+    if (complexitySlider) {
+      complexitySlider.addEventListener('input', e => {
+        settingsOverride.complexity = parseInt(e.target.value, 10) / 100;
+        document.getElementById('complexityVal').textContent = e.target.value + '%';
+        applySettingAndRender();
+      });
+    }
+    if (colorShiftSlider) {
+      colorShiftSlider.addEventListener('input', e => {
+        settingsOverride.colorShift = parseInt(e.target.value, 10) / 100;
+        document.getElementById('colorShiftVal').textContent = e.target.value + '%';
+        applySettingAndRender();
+      });
+    }
+
+    /* Symmetry segmented control */
+    document.getElementById('symmetrySeg').addEventListener('click', e => {
+      const btn = e.target.closest('[data-sym]');
+      if (!btn) return;
+      document.querySelectorAll('#symmetrySeg button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      settingsOverride.symmetry = parseInt(btn.dataset.sym, 10);
+      applySettingAndRender();
+    });
+
+    /* Slider reset buttons */
+    document.querySelectorAll('.slider-reset').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const key = btn.dataset.slider;
+        settingsOverride[key] = null;
+        syncSlidersToSpec();
+        applySettingAndRender();
+      });
     });
 
     /* Keyboard */

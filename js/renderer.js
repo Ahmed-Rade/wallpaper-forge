@@ -125,6 +125,10 @@ const Renderer = (() => {
     gl.uniform1f(uLoc['u_scale'],    uniforms.scale    !== undefined ? uniforms.scale    : 1.0);
     gl.uniform1i(uLoc['u_warpOctaves'], quality.octaves);
     gl.uniform1i(uLoc['u_warpIters'],   quality.iters);
+    gl.uniform1f(uLoc['u_density'],     uniforms.density    !== undefined ? uniforms.density    : 0.5);
+    gl.uniform1f(uLoc['u_complexity'],  uniforms.complexity !== undefined ? uniforms.complexity : 0.5);
+    gl.uniform1f(uLoc['u_symmetry'],    uniforms.symmetry   !== undefined ? uniforms.symmetry   : 0.0);
+    gl.uniform1f(uLoc['u_colorShift'],  uniforms.colorShift !== undefined ? uniforms.colorShift : 0.0);
 
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -219,7 +223,8 @@ const Renderer = (() => {
                         'u_params','u_color0','u_color1','u_color2','u_color3',
                         'u_color4','u_color5','u_color6',
                         'u_focalX','u_focalY','u_rotation','u_scale',
-                        'u_warpOctaves','u_warpIters'];
+                        'u_warpOctaves','u_warpIters',
+                        'u_density','u_complexity','u_symmetry','u_colorShift'];
     passNames.forEach(n => { uLoc[n] = gl.getUniformLocation(passProgram, n); });
 
     const compNames = ['u_layer0','u_layer1','u_layer2','u_layerCount',
@@ -264,6 +269,7 @@ const Renderer = (() => {
     const color5 = tones[3] || color2;
     const color6 = tones[5] || color3;
     const cb     = spec.compositionBias || {};
+    const ss     = spec.settings || spec.seedSettings || {};  /* merged: seed defaults + user overrides */
 
     const baseLayers = (spec.aesthetic && spec.aesthetic.layers && spec.aesthetic.layers.length)
       ? spec.aesthetic.layers
@@ -284,6 +290,7 @@ const Renderer = (() => {
       renderToFBO(fbos[i], {
         seed, mode, pass: i, params, color0, color1, color2, color3, color4, color5, color6,
         focalX: cb.focalX, focalY: cb.focalY, rotation: cb.rotation, scale: cb.scale,
+        density: ss.density, complexity: ss.complexity, symmetry: ss.symmetry, colorShift: ss.colorShift,
       });
     });
 
