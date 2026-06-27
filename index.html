@@ -114,11 +114,48 @@
   </div>
 </div>
 
-<script src="shaders.js"></script>
-<script src="aesthetics.js"></script>
-<script src="generator.js"></script>
-<script src="renderer.js"></script>
-<script src="export.js"></script>
-<script src="main.js"></script>
+<div id="fatalError" class="fatal-error" hidden></div>
+
+<script>
+(function() {
+  var FILES = ['shaders.js','aesthetics.js','generator.js','renderer.js','export.js','main.js'];
+
+  function showFatal(msg) {
+    var el = document.getElementById('fatalError');
+    el.textContent = msg;
+    el.hidden = false;
+  }
+
+  function loadSequential(prefix, startIndex, onDone, onFail) {
+    var i = startIndex;
+    function next() {
+      if (i >= FILES.length) return onDone();
+      var s = document.createElement('script');
+      s.src = prefix + FILES[i];
+      s.onload = function() { i++; next(); };
+      s.onerror = function() { onFail(FILES[i], prefix); };
+      document.head.appendChild(s);
+    }
+    next();
+  }
+
+  /* Probe: try flat layout first; if the very first file 404s
+     (nothing executed yet, safe to retry), fall back to js/ subfolder. */
+  var probe = document.createElement('script');
+  probe.src = FILES[0];
+  probe.onload = function() {
+    /* shaders.js already loaded via probe — continue from file index 1 */
+    loadSequential('', 1, function(){}, function(file) {
+      showFatal('Failed to load ' + file + ' — check it exists next to index.html.');
+    });
+  };
+  probe.onerror = function() {
+    loadSequential('js/', 0, function(){}, function(file) {
+      showFatal('Could not find app files (' + file + '). Make sure shaders.js, aesthetics.js, generator.js, renderer.js, export.js, main.js are either next to index.html or inside a js/ subfolder.');
+    });
+  };
+  document.head.appendChild(probe);
+})();
+</script>
 </body>
 </html>

@@ -387,9 +387,22 @@
   /* ════════════════════════════════════════
      INIT
   ════════════════════════════════════════ */
+  function showFatalRenderError(msg) {
+    let el = document.getElementById('fatalError');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'fatalError';
+      el.className = 'fatal-error';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.hidden = false;
+  }
+  window.showFatalRenderError = showFatalRenderError;
+
   function init() {
     const canvas = document.getElementById('gl-canvas');
-    Renderer.init(canvas);
+    const rendererOk = Renderer.init(canvas);
     Renderer.setQuality(QUALITY);
     window.addEventListener('resize', () => { Renderer.resize(canvas); Renderer.render(state.spec); });
 
@@ -401,6 +414,8 @@
     const initSeed = fromHash !== null ? fromHash : randomSeedInt();
     loadSeed(initSeed);
     updateDots();
+
+    if (!rendererOk) hideLoading();
 
     /* Hash navigation (browser back/forward) */
     window.addEventListener('hashchange', () => {
@@ -475,5 +490,9 @@
     resetFade();
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();

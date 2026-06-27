@@ -537,6 +537,27 @@ select option { background: #111; color: #fff; }
 .loading-indicator.fade-out { opacity: 0; }
 
 /* ════════════════════════════════════════
+   FATAL ERROR BANNER (visible JS/WebGL failure)
+════════════════════════════════════════ */
+.fatal-error {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  max-width: 480px;
+  width: calc(100% - 48px);
+  background: rgba(40,8,8,0.95);
+  border: 1px solid rgba(255,90,70,0.5);
+  border-radius: 8px;
+  padding: 18px 22px;
+  color: #ffb4a8;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+/* ════════════════════════════════════════
    MOBILE
 ════════════════════════════════════════ */
 @media (max-width: 600px) {

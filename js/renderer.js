@@ -182,13 +182,23 @@ const Renderer = (() => {
 
   function init(canvas) {
     gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) { console.error('WebGL not supported'); return false; }
+    if (!gl) {
+      const msg = 'WebGL is not available in this browser — Wallpaper Forge needs it to render.';
+      console.error(msg);
+      if (typeof window.showFatalRenderError === 'function') window.showFatalRenderError(msg);
+      return false;
+    }
     gl.getExtension('OES_standard_derivatives');
 
     passProgram = buildProgram(SHADERS.vertex, SHADERS.fragment);
     compositeProgram = buildProgram(SHADERS.compositeVertex, SHADERS.compositeFragment);
     postProgram = buildProgram(SHADERS.postVertex, SHADERS.postFragment);
-    if (!passProgram || !compositeProgram || !postProgram) return false;
+    if (!passProgram || !compositeProgram || !postProgram) {
+      const msg = 'Shader compile failed — see console for the GLSL error.';
+      console.error(msg);
+      if (typeof window.showFatalRenderError === 'function') window.showFatalRenderError(msg);
+      return false;
+    }
 
     const verts = new Float32Array([
       -1,-1,  1,-1,  -1, 1,

@@ -40,6 +40,9 @@ const SHADERS = {
     vec2 mod289v2(vec2 x) { return x - floor(x*(1.0/289.0))*289.0; }
     vec3 permute(vec3 x) { return mod289v3(((x*34.0)+10.0)*x); }
 
+    /* GLSL ES 1.00 has no int overload of min() — roll our own */
+    int iMin(int a, int b) { return a < b ? a : b; }
+
     float snoise(vec2 v) {
       const vec4 C = vec4(0.211324865405187, 0.366025403784439,
                          -0.577350269189626, 0.024390243902439);
@@ -116,7 +119,7 @@ const SHADERS = {
         vec2 cp = center - 0.5;
         cp.x *= u_resolution.x / u_resolution.y;
         vec2 diff = p - cp;
-        float wn = fbm(p*1.8 + vec2(fi*2.7, fi*1.4), min(5, u_warpOctaves), 2.0, 0.5);
+        float wn = fbm(p*1.8 + vec2(fi*2.7, fi*1.4), iMin(5, u_warpOctaves), 2.0, 0.5);
         float dist = length(diff + vec2(wn*0.3, wn*0.2));
         float radius = 0.18 + hash(vec2(fi*7.1, 2.9)) * 0.22;
         float glow = exp(-dist * dist / (radius * radius));
@@ -195,7 +198,7 @@ const SHADERS = {
     ════════════════════════════════════════ */
     float organic_height(vec2 p) {
       float h = warp(p * 1.4) * 0.5 + 0.5;
-      float h2 = fbm(p * 0.6 + vec2(3.1, 7.4), min(5, u_warpOctaves), 2.0, 0.52) * 0.5 + 0.5;
+      float h2 = fbm(p * 0.6 + vec2(3.1, 7.4), iMin(5, u_warpOctaves), 2.0, 0.52) * 0.5 + 0.5;
       return clamp(h * 0.7 + h2 * 0.3, 0.0, 1.0);
     }
     vec4 organic_terrain_base(vec2 uv, vec2 p) {
@@ -213,7 +216,7 @@ const SHADERS = {
       return vec4(clamp(bandCol, 0.0, 1.0), 1.0);
     }
     vec4 organic_terrain_detail(vec2 uv, vec2 p) {
-      float detail = fbm(p * 3.5, min(4, u_warpOctaves), 2.0, 0.5) * 0.5 + 0.5;
+      float detail = fbm(p * 3.5, iMin(4, u_warpOctaves), 2.0, 0.5) * 0.5 + 0.5;
       return vec4(vec3(detail), 0.5);
     }
     vec4 organic_contours(vec2 uv, vec2 p) {
@@ -287,7 +290,7 @@ const SHADERS = {
     }
     vec4 cosmic_nebula(vec2 uv, vec2 p) {
       float neb1 = fbm(p * 0.55 + vec2(1.3, 0.7), u_warpOctaves, 2.0, 0.5) * 0.5 + 0.5;
-      float neb2 = fbm(p * 0.40 + vec2(4.1, 2.9), min(5, u_warpOctaves), 2.1, 0.48) * 0.5 + 0.5;
+      float neb2 = fbm(p * 0.40 + vec2(4.1, 2.9), iMin(5, u_warpOctaves), 2.1, 0.48) * 0.5 + 0.5;
       neb1 = smoothstep(0.38, 0.85, neb1);
       neb2 = smoothstep(0.42, 0.80, neb2);
       vec3 col = u_color1 * neb1 * 0.38 + u_color2 * neb2 * 0.28;
@@ -308,7 +311,7 @@ const SHADERS = {
       vec2 bodyDiff = (uv - bodyCenter) * vec2(aspect, 1.0);
       float bodyDist = length(bodyDiff);
       float sphere = pow(1.0 - clamp(bodyDist / bodyRadius, 0.0, 1.0), 0.7);
-      float surfNoise = fbm(bodyDiff * 8.0 + vec2(u_seed*0.001), min(4, u_warpOctaves), 2.0, 0.5) * 0.5 + 0.5;
+      float surfNoise = fbm(bodyDiff * 8.0 + vec2(u_seed*0.001), iMin(4, u_warpOctaves), 2.0, 0.5) * 0.5 + 0.5;
       vec3 bodyCol = mix(u_color3 * 0.5, u_color3, surfNoise);
       float limb = 1.0 - clamp(bodyDist / bodyRadius, 0.0, 1.0);
       bodyCol *= (0.5 + 0.5 * limb);
