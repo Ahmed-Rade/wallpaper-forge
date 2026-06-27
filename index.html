@@ -2,112 +2,123 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Wallpaper Forge</title>
 <link rel="stylesheet" href="style.css">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231e1e2e'/%3E%3Cpath d='M8 8h6v6H8z' fill='%23ff79c6'/%3E%3Ccircle cx='23' cy='11' r='3' fill='%238be9fd'/%3E%3Cpath d='M8 20 l5 5 l5-5' stroke='%23f1fa8c' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='20' y1='24' x2='24' y2='20' stroke='%23bd93f9' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
 </head>
 <body>
 
-<div class="sidebar">
-  <div class="brand">
-    <span class="eyebrow">Procedural / No two alike</span>
-    <h1>Wallpaper Forge</h1>
-    <p>Generate a one&#8209;off background, sized for your screen. Every reroll is a new variation &mdash; nothing is stored or repeated.</p>
-  </div>
+<canvas id="gl-canvas"></canvas>
 
-  <div class="field">
-    <label>Device</label>
-    <div class="seg" id="deviceSeg">
-      <button data-device="phone" class="active">Phone</button>
-      <button data-device="desktop">Desktop</button>
-      <button data-device="square">Square</button>
+<!-- Top bar -->
+<div class="ui-top" id="uiTop">
+  <div class="logotype">Wallpaper Forge</div>
+  <div class="ui-top-right">
+    <!-- Mode lock dot (hidden until mode locked) -->
+    <div class="mode-lock-dot" id="modeLockDot" hidden>
+      <span class="mode-dot-circle" id="modeDotCircle"></span>
+      <span class="mode-dot-label" id="modeDotLabel"></span>
     </div>
-  </div>
-
-  <div class="field" id="sizeField">
-    <label>Resolution</label>
-    <select id="sizeSelect"></select>
-  </div>
-
-  <hr>
-
-  <div class="field">
-    <label>Pattern</label>
-    <div class="pattern-grid" id="patternGrid"></div>
-  </div>
-
-  <div class="field" id="solidColorField" style="display:none;">
-    <label>Solid Color</label>
-    <div class="color-row">
-      <input type="color" id="solidColorPicker" value="#16282c">
-      <input type="text" id="solidColorHex" value="#16282c" maxlength="7">
-    </div>
-  </div>
-
-  <hr>
-
-  <div class="field">
-    <label>Mode</label>
-    <div class="seg" id="modeSeg">
-      <button data-mode="dark" class="active">Dark</button>
-      <button data-mode="light">Light</button>
-    </div>
-  </div>
-
-  <div class="field" id="paletteField">
-    <label>Palette</label>
-    <div class="swatches" id="paletteGrid"></div>
-  </div>
-
-  <div class="field" id="densityField">
-    <label>Density</label>
-    <div class="slider-row">
-      <input type="range" id="densitySlider" min="1" max="10" value="5">
-      <span class="val" id="densityVal">5</span>
-    </div>
-  </div>
-
-  <div class="field">
-    <label>Grain</label>
-    <div class="slider-row">
-      <input type="range" id="grainSlider" min="0" max="10" value="3">
-      <span class="val" id="grainVal">3</span>
-    </div>
-  </div>
-
-  <div class="field">
-    <label>Glass</label>
-    <div class="slider-row">
-      <input type="range" id="glassSlider" min="0" max="10" value="0">
-      <span class="val" id="glassVal">0</span>
-    </div>
-  </div>
-
-  <div class="field">
-    <label>Fluted Glass</label>
-    <div class="slider-row">
-      <input type="range" id="barwarpSlider" min="0" max="10" value="0">
-      <span class="val" id="barwarpVal">0</span>
-    </div>
-  </div>
-
-  <hr>
-
-  <button class="reroll-btn" id="rerollBtn">⟳ Reroll this pattern</button>
-  <button class="random-btn" id="randomBtn">✦ Random Everything</button>
-  <div class="seed-display" id="seedDisplay">seed &mdash;</div>
-
-  <button class="download-btn" id="downloadBtn">Download PNG</button>
-</div>
-
-<div class="stage">
-  <div class="frame-wrap">
-    <div class="frame-label" id="frameLabel">1170 × 2532</div>
-    <canvas id="cv"></canvas>
+    <!-- Seed pill: click copies URL -->
+    <button class="seed-pill" id="seedPill" title="Copy link to this wallpaper">
+      <span id="seedDisplay">WF-000000</span>
+      <span class="seed-copy-hint" id="seedCopyHint">Copy</span>
+    </button>
   </div>
 </div>
 
-<script src="script.js"></script>
+<!-- Bottom bar -->
+<div class="ui-bottom" id="uiBottom">
+  <div class="bottom-cluster">
+    <!-- Evolve toggle, left of cluster -->
+    <button class="aux-btn evolve-toggle" id="evolveToggle" title="Evolve mode (E)">Evolve</button>
+
+    <!-- Main pill -->
+    <div class="pill">
+      <button class="pill-btn" id="backBtn">← Back</button>
+      <div class="pill-divider"></div>
+      <button class="pill-btn pill-btn--next" id="nextBtn">Next →</button>
+      <div class="pill-divider"></div>
+      <button class="pill-btn" id="saveBtn">↓ Save</button>
+    </div>
+
+    <!-- Config gear, right of cluster -->
+    <button class="aux-btn" id="configToggle" title="Settings (C)">⚙</button>
+  </div>
+
+  <!-- History dots -->
+  <div class="hist-dots" id="histDots">
+    <span class="hist-dot"></span>
+    <span class="hist-dot"></span>
+    <span class="hist-dot"></span>
+  </div>
+</div>
+
+<!-- Config panel (slides up from bottom) -->
+<div class="config-panel" id="configPanel">
+  <div class="config-sheet">
+    <div class="config-header">
+      <span class="config-title">Settings</span>
+      <button class="config-close" id="configClose">✕</button>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Device</div>
+      <div class="seg" id="deviceSeg">
+        <button data-device="phone" class="active">Phone</button>
+        <button data-device="desktop">Desktop</button>
+        <button data-device="square">Square</button>
+      </div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Resolution</div>
+      <select id="resSelect"></select>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Mode</div>
+      <div class="mode-pills" id="modePills">
+        <button class="mode-pill active" data-mode="auto">Auto</button>
+        <button class="mode-pill" data-mode="ethereal">Ethereal</button>
+        <button class="mode-pill" data-mode="organic">Organic</button>
+        <button class="mode-pill" data-mode="cosmic">Cosmic</button>
+        <button class="mode-pill" data-mode="watercolor">Watercolor</button>
+        <button class="mode-pill" data-mode="molten">Molten</button>
+        <button class="mode-pill" data-mode="botanical">Botanical</button>
+        <button class="mode-pill" data-mode="neonnoir">Neon Noir</button>
+        <button class="mode-pill" data-mode="arctic">Arctic</button>
+        <button class="mode-pill" data-mode="brutalist">Brutalist</button>
+        <button class="mode-pill" data-mode="retrotech">Retro Tech</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Config backdrop -->
+<div class="config-backdrop" id="configBackdrop"></div>
+
+<!-- Shortcuts overlay -->
+<div class="shortcuts-overlay" id="shortcutsOverlay">
+  <div class="shortcuts-box">
+    <div class="shortcuts-title">Keyboard Shortcuts</div>
+    <div class="shortcuts-grid">
+      <span>Space / →</span><span>Next wallpaper</span>
+      <span>←  /  B</span><span>Back</span>
+      <span>S</span><span>Save</span>
+      <span>E</span><span>Toggle Evolve mode</span>
+      <span>C / Esc</span><span>Toggle settings</span>
+      <span>?</span><span>Show shortcuts</span>
+    </div>
+    <button class="shortcuts-close" id="shortcutsClose">Close</button>
+  </div>
+</div>
+
+<script src="js/shaders.js"></script>
+<script src="js/aesthetics.js"></script>
+<script src="js/generator.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/export.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
