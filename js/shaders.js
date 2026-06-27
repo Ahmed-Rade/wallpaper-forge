@@ -66,12 +66,12 @@ const SHADERS = {
     float fbm(vec2 p, int oct, float lac, float gain) {
       float v=0.0, a=0.5, f=1.0, mx=0.0;
       for (int i=0;i<8;i++) {
-        if (i>=oct) break;
-        v  += snoise(p*f)*a;
-        mx += a;
+        float active = step(float(i), float(oct) - 1.0);
+        v  += snoise(p*f)*a*active;
+        mx += a*active;
         a  *= gain; f *= lac;
       }
-      return v/mx;
+      return v / max(mx, 0.0001);
     }
 
     float warp(vec2 p) {
