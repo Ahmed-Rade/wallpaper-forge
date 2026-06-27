@@ -65,6 +65,7 @@ const Generator = (() => {
 
   function pickPalette(aestheticId, rng, opts) {
     const force = opts && opts.force;
+    const brightnessMode = opts && opts.brightnessMode; /* 'light' | 'dark' | undefined */
     const aesthetic = AESTHETICS.find(a => a.id === aestheticId);
     const tags = AESTHETIC_PALETTE_MAP[aesthetic ? aesthetic.mode : 0] || [];
     const compatible = PALETTES.filter(p => p.tags.some(t => tags.includes(t)));
@@ -72,6 +73,10 @@ const Generator = (() => {
     if (!force) {
       const highContrast = pool.filter(p => !p.lowContrast);
       if (highContrast.length) pool = highContrast;
+    }
+    if (brightnessMode === 'light' || brightnessMode === 'dark') {
+      const matched = pool.filter(p => p.brightness === brightnessMode);
+      if (matched.length) pool = matched;
     }
     return pool[Math.floor(rng() * pool.length)];
   }
@@ -109,12 +114,12 @@ const Generator = (() => {
   }
 
   /* seedInt: integer 0-999999 */
-  function generateWallpaper(seedInt) {
+  function generateWallpaper(seedInt, opts) {
     seedInt = seedInt >>> 0;
     const rng = mulberry32(seedInt);
 
     const aesthetic      = pickAesthetic(rng);
-    const paletteDef     = pickPalette(aesthetic.id, rng);
+    const paletteDef     = pickPalette(aesthetic.id, rng, opts);
     const params         = pickParams(aesthetic.id, rng);
     const layerOpacities = deriveLayerOpacities(aesthetic.id, rng);
     const noiseOffset    = { x: rng() * 1000, y: rng() * 1000 };

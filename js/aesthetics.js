@@ -237,6 +237,12 @@ function luminance(hex) {
 PALETTES.forEach(p => {
   const lums = p.colors.map(luminance);
   p.lowContrast = (Math.max(...lums) - Math.min(...lums)) < 0.3;
+  /* Weighted toward the darker stops, since the base/background layer
+     (rendered at full opacity) dominates perceived brightness far more
+     than the lighter accent/highlight stops blended on top at <1 opacity. */
+  const sorted = [...lums].sort((a, b) => a - b);
+  const weighted = sorted[0]*0.4 + sorted[1]*0.3 + sorted[2]*0.2 + sorted[3]*0.1;
+  p.brightness = weighted < 0.3 ? 'dark' : 'light';
 });
 
 const AESTHETIC_PALETTE_MAP = {

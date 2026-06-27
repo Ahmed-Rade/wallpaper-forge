@@ -88,12 +88,17 @@
     isShortcutsOpen: false,
     evolveMode:   false,
     lockedMode:   null,   /* null = Auto, else aesthetic id string */
+    brightnessMode: 'auto', /* 'auto' | 'light' | 'dark' */
     spec:         null,
     history:      [],
     historyIndex: -1,
   };
 
   /* ── Seed / URL ── */
+  function genOpts() {
+    return state.brightnessMode !== 'auto' ? { brightnessMode: state.brightnessMode } : undefined;
+  }
+
   function randomSeedInt() {
     return Math.floor(Math.random() * 1000000);
   }
@@ -183,7 +188,7 @@
     state.seedInt = seedInt;
 
     /* If a mode is locked, patch the spec after generation */
-    let spec = Generator.generateWallpaper(seedInt);
+    let spec = Generator.generateWallpaper(seedInt, genOpts());
     if (state.lockedMode) {
       const lockedAesthetic = AESTHETICS.find(a => a.id === state.lockedMode);
       if (lockedAesthetic) spec.aesthetic = lockedAesthetic;
@@ -225,7 +230,7 @@
 
   /* ── Smart Pick ── */
   function buildSpecForSeed(seedInt) {
-    const spec = Generator.generateWallpaper(seedInt);
+    const spec = Generator.generateWallpaper(seedInt, genOpts());
     if (state.lockedMode) {
       const lockedAesthetic = AESTHETICS.find(a => a.id === state.lockedMode);
       if (lockedAesthetic) spec.aesthetic = lockedAesthetic;
@@ -574,6 +579,16 @@
 
     /* Mode lock dot: click to unlock */
     document.getElementById('modeLockDot').addEventListener('click', () => setLockedMode(null));
+
+    /* Brightness segmented control (Auto/Light/Dark) */
+    document.getElementById('brightnessSeg').addEventListener('click', e => {
+      const btn = e.target.closest('[data-brightness]');
+      if (!btn) return;
+      document.querySelectorAll('#brightnessSeg button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.brightnessMode = btn.dataset.brightness;
+      loadSeed(state.seedInt, false); /* re-roll current spec under the new filter */
+    });
 
     /* Device segmented control */
     document.getElementById('deviceSeg').addEventListener('click', e => {

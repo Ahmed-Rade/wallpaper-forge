@@ -1053,6 +1053,7 @@ const SHADERS = {
       float cr = cos(u_rotation), sr = sin(u_rotation);
       p = mat2(cr, -sr, sr, cr) * p;
       p *= mix(1.0, 1.0 / max(u_scale, 0.001), 0.5);
+      p = applySymmetry(p); /* was only applied inside 4 of 15 modes — now global */
 
       vec4 outc = vec4(0.0, 0.0, 0.0, 1.0);
 
