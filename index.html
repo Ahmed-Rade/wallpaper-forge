@@ -2,219 +2,112 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wallpaper Forge</title>
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231e1e2e'/%3E%3Cpath d='M8 8h6v6H8z' fill='%23ff79c6'/%3E%3Ccircle cx='23' cy='11' r='3' fill='%238be9fd'/%3E%3Cpath d='M8 20 l5 5 l5-5' stroke='%23f1fa8c' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='20' y1='24' x2='24' y2='20' stroke='%23bd93f9' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
 </head>
 <body>
 
-<canvas id="gl-canvas"></canvas>
+<div class="sidebar">
+  <div class="brand">
+    <span class="eyebrow">Procedural / No two alike</span>
+    <h1>Wallpaper Forge</h1>
+    <p>Generate a one&#8209;off background, sized for your screen. Every reroll is a new variation &mdash; nothing is stored or repeated.</p>
+  </div>
 
-<!-- Top bar -->
-<div class="ui-top" id="uiTop">
-  <div class="logotype">Wallpaper Forge</div>
-  <div class="ui-top-right">
-    <!-- Mode lock dot (hidden until mode locked) -->
-    <div class="mode-lock-dot" id="modeLockDot" hidden>
-      <span class="mode-dot-circle" id="modeDotCircle"></span>
-      <span class="mode-dot-label" id="modeDotLabel"></span>
+  <div class="field">
+    <label>Device</label>
+    <div class="seg" id="deviceSeg">
+      <button data-device="phone" class="active">Phone</button>
+      <button data-device="desktop">Desktop</button>
+      <button data-device="square">Square</button>
     </div>
-    <!-- Seed pill: click copies URL -->
-    <button class="seed-pill" id="seedPill" title="Copy link to this wallpaper">
-      <span id="seedDisplay">WF-000000</span>
-      <span class="seed-copy-hint" id="seedCopyHint">Copy</span>
-    </button>
+  </div>
+
+  <div class="field" id="sizeField">
+    <label>Resolution</label>
+    <select id="sizeSelect"></select>
+  </div>
+
+  <hr>
+
+  <div class="field">
+    <label>Pattern</label>
+    <div class="pattern-grid" id="patternGrid"></div>
+  </div>
+
+  <div class="field" id="solidColorField" style="display:none;">
+    <label>Solid Color</label>
+    <div class="color-row">
+      <input type="color" id="solidColorPicker" value="#16282c">
+      <input type="text" id="solidColorHex" value="#16282c" maxlength="7">
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="field">
+    <label>Mode</label>
+    <div class="seg" id="modeSeg">
+      <button data-mode="dark" class="active">Dark</button>
+      <button data-mode="light">Light</button>
+    </div>
+  </div>
+
+  <div class="field" id="paletteField">
+    <label>Palette</label>
+    <div class="swatches" id="paletteGrid"></div>
+  </div>
+
+  <div class="field" id="densityField">
+    <label>Density</label>
+    <div class="slider-row">
+      <input type="range" id="densitySlider" min="1" max="10" value="5">
+      <span class="val" id="densityVal">5</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Grain</label>
+    <div class="slider-row">
+      <input type="range" id="grainSlider" min="0" max="10" value="3">
+      <span class="val" id="grainVal">3</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Glass</label>
+    <div class="slider-row">
+      <input type="range" id="glassSlider" min="0" max="10" value="0">
+      <span class="val" id="glassVal">0</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Fluted Glass</label>
+    <div class="slider-row">
+      <input type="range" id="barwarpSlider" min="0" max="10" value="0">
+      <span class="val" id="barwarpVal">0</span>
+    </div>
+  </div>
+
+  <hr>
+
+  <button class="reroll-btn" id="rerollBtn">⟳ Reroll this pattern</button>
+  <button class="random-btn" id="randomBtn">✦ Random Everything</button>
+  <div class="seed-display" id="seedDisplay">seed &mdash;</div>
+
+  <button class="download-btn" id="downloadBtn">Download PNG</button>
+</div>
+
+<div class="stage">
+  <div class="frame-wrap">
+    <div class="frame-label" id="frameLabel">1170 × 2532</div>
+    <canvas id="cv"></canvas>
   </div>
 </div>
 
-<!-- Bottom bar -->
-<div class="ui-bottom" id="uiBottom">
-  <div class="bottom-cluster">
-    <!-- Evolve toggle, left of cluster -->
-    <button class="aux-btn evolve-toggle" id="evolveToggle" title="Evolve mode (E)">Evolve</button>
-    <button class="aux-btn" id="smartBtn" title="Smart Pick: render 3 candidates, keep the best">✦ Smart</button>
-
-    <!-- Main pill -->
-    <div class="pill">
-      <button class="pill-btn" id="backBtn">← Back</button>
-      <div class="pill-divider"></div>
-      <button class="pill-btn pill-btn--next" id="nextBtn">Next →</button>
-      <div class="pill-divider"></div>
-      <button class="pill-btn" id="saveBtn">↓ Save</button>
-    </div>
-
-    <!-- Config gear, right of cluster -->
-    <button class="aux-btn" id="configToggle" title="Settings (C)">⚙</button>
-  </div>
-
-  <!-- Seed neighbor strip -->
-  <div class="neighbor-strip" id="neighborStrip">
-    <canvas width="40" height="72" title="2 back"></canvas>
-    <canvas width="40" height="72" title="1 back"></canvas>
-    <canvas width="40" height="72" title="current"></canvas>
-    <canvas width="40" height="72" title="1 forward"></canvas>
-    <canvas width="40" height="72" title="2 forward"></canvas>
-  </div>
-
-  <!-- History dots -->
-  <div class="hist-dots" id="histDots">
-    <span class="hist-dot"></span>
-    <span class="hist-dot"></span>
-    <span class="hist-dot"></span>
-  </div>
-</div>
-
-<!-- Config panel (slides up from bottom) -->
-<div class="config-panel" id="configPanel">
-  <div class="config-sheet">
-    <div class="config-header">
-      <span class="config-title">Settings</span>
-      <button class="config-close" id="configClose">✕</button>
-    </div>
-
-    <div class="config-row">
-      <div class="config-label">Device</div>
-      <div class="seg" id="deviceSeg">
-        <button data-device="phone" class="active">Phone</button>
-        <button data-device="desktop">Desktop</button>
-        <button data-device="square">Square</button>
-      </div>
-    </div>
-
-    <div class="config-row">
-      <div class="config-label">Resolution</div>
-      <select id="resSelect"></select>
-    </div>
-
-    <div class="config-row">
-      <div class="config-label">Mode</div>
-      <div class="mode-pills" id="modePills">
-        <button class="mode-pill active" data-mode="auto">Auto</button>
-        <button class="mode-pill" data-mode="ethereal">Ethereal</button>
-        <button class="mode-pill" data-mode="organic">Organic</button>
-        <button class="mode-pill" data-mode="cosmic">Cosmic</button>
-        <button class="mode-pill" data-mode="watercolor">Watercolor</button>
-        <button class="mode-pill" data-mode="molten">Molten</button>
-        <button class="mode-pill" data-mode="botanical">Botanical</button>
-        <button class="mode-pill" data-mode="neonnoir">Neon Noir</button>
-        <button class="mode-pill" data-mode="arctic">Arctic</button>
-        <button class="mode-pill" data-mode="brutalist">Brutalist</button>
-        <button class="mode-pill" data-mode="retrotech">Retro Tech</button>
-        <button class="mode-pill" data-mode="crystalline">Crystalline</button>
-        <button class="mode-pill" data-mode="silk">Fluid Silk</button>
-        <button class="mode-pill" data-mode="sacred">Sacred Geo</button>
-        <button class="mode-pill" data-mode="glitch">Glitch</button>
-        <button class="mode-pill" data-mode="mycelium">Mycelium</button>
-      </div>
-    </div>
-
-    <div class="config-row">
-      <div class="config-label">Brightness</div>
-      <div class="seg" id="brightnessSeg">
-        <button data-brightness="auto" class="active">Auto</button>
-        <button data-brightness="light">Light</button>
-        <button data-brightness="dark">Dark</button>
-      </div>
-    </div>
-
-    <div class="config-row">
-      <div class="config-label">Density
-        <span class="slider-value" id="densityVal"></span>
-        <button class="slider-reset" data-slider="density" title="Reset to seed value">↺</button>
-      </div>
-      <input type="range" class="cfg-slider" id="densitySlider" min="0" max="100" step="1">
-    </div>
-
-    <div class="config-row">
-      <div class="config-label">Complexity
-        <span class="slider-value" id="complexityVal"></span>
-        <button class="slider-reset" data-slider="complexity" title="Reset to seed value">↺</button>
-      </div>
-      <input type="range" class="cfg-slider" id="complexitySlider" min="0" max="100" step="1">
-    </div>
-
-    <div class="config-row">
-      <div class="config-label">Symmetry</div>
-      <div class="seg" id="symmetrySeg">
-        <button data-sym="0" class="active">None</button>
-        <button data-sym="1">Mirror</button>
-        <button data-sym="2">4-Fold</button>
-        <button data-sym="3">6-Fold</button>
-      </div>
-    </div>
-
-    <div class="config-row">
-      <div class="config-label">Color Shift
-        <span class="slider-value" id="colorShiftVal"></span>
-        <button class="slider-reset" data-slider="colorShift" title="Reset to seed value">↺</button>
-      </div>
-      <input type="range" class="cfg-slider" id="colorShiftSlider" min="0" max="100" step="1">
-    </div>
-  </div>
-</div>
-
-<!-- Config backdrop -->
-<div class="config-backdrop" id="configBackdrop"></div>
-
-<!-- Shortcuts overlay -->
-<div class="shortcuts-overlay" id="shortcutsOverlay">
-  <div class="shortcuts-box">
-    <div class="shortcuts-title">Keyboard Shortcuts</div>
-    <div class="shortcuts-grid">
-      <span>Space / →</span><span>Next wallpaper</span>
-      <span>←  /  B</span><span>Back</span>
-      <span>S</span><span>Save</span>
-      <span>E</span><span>Toggle Evolve mode</span>
-      <span>C / Esc</span><span>Toggle settings</span>
-      <span>?</span><span>Show shortcuts</span>
-    </div>
-    <button class="shortcuts-close" id="shortcutsClose">Close</button>
-  </div>
-</div>
-
-<div id="fatalError" class="fatal-error" hidden></div>
-
-<script>
-(function() {
-  var FILES = ['shaders.js','aesthetics.js','generator.js','renderer.js','export.js','main.js'];
-
-  function showFatal(msg) {
-    var el = document.getElementById('fatalError');
-    el.textContent = msg;
-    el.hidden = false;
-  }
-
-  function loadSequential(prefix, startIndex, onDone, onFail) {
-    var i = startIndex;
-    function next() {
-      if (i >= FILES.length) return onDone();
-      var s = document.createElement('script');
-      s.src = prefix + FILES[i];
-      s.onload = function() { i++; next(); };
-      s.onerror = function() { onFail(FILES[i], prefix); };
-      document.head.appendChild(s);
-    }
-    next();
-  }
-
-  /* Probe: try flat layout first; if the very first file 404s
-     (nothing executed yet, safe to retry), fall back to js/ subfolder. */
-  var probe = document.createElement('script');
-  probe.src = FILES[0];
-  probe.onload = function() {
-    /* shaders.js already loaded via probe — continue from file index 1 */
-    loadSequential('', 1, function(){}, function(file) {
-      showFatal('Failed to load ' + file + ' — check it exists next to index.html.');
-    });
-  };
-  probe.onerror = function() {
-    loadSequential('js/', 0, function(){}, function(file) {
-      showFatal('Could not find app files (' + file + '). Make sure shaders.js, aesthetics.js, generator.js, renderer.js, export.js, main.js are either next to index.html or inside a js/ subfolder.');
-    });
-  };
-  document.head.appendChild(probe);
-})();
-</script>
+<script src="script.js"></script>
 </body>
 </html>
