@@ -53,158 +53,131 @@
   // ---------- Palettes (each: bg + array of accent colors) ----------
   // Each palette ships a dark variant (default) and a light variant.
   const PALETTES = [
-    // — Earth & Organic —
-    { name: "Terracotta Dusk",
-      dark:  { bg: "#241f1a", colors: ["#b5532c", "#e8a04e", "#f4f1ea", "#5c6e4f"] },
-      light: { bg: "#f4ece1", colors: ["#b5532c", "#a3742f", "#3a3026", "#5c6e4f"] } },
-    { name: "Paper & Rust",
-      dark:  { bg: "#3a342c", colors: ["#e8895a", "#f4f1ea", "#bdb18f", "#8aa179"] },
-      light: { bg: "#f4f1ea", colors: ["#b5532c", "#16140f", "#8a8166", "#5c6e4f"] } },
-    { name: "Deep Moss",
-      dark:  { bg: "#1b2417", colors: ["#5c6e4f", "#a9b88c", "#f4f1ea", "#3d4a32"] },
-      light: { bg: "#eef2e9", colors: ["#4a5c3d", "#1b2417", "#7c8f63", "#cdd9bb"] } },
-    { name: "Clay Sand",
-      dark:  { bg: "#2c2418", colors: ["#d97a45", "#f4f1ea", "#a3936c", "#5c6e4f"] },
-      light: { bg: "#e4d8bf", colors: ["#b5532c", "#16140f", "#7a6a4f", "#f4f1ea"] } },
-    { name: "Citrus Field",
-      dark:  { bg: "#2c2410", colors: ["#e8a04e", "#d97a45", "#f4f1ea", "#7c8f63"] },
-      light: { bg: "#fdf4dc", colors: ["#e8a04e", "#b5532c", "#16140f", "#5c6e4f"] } },
-    { name: "Sage Linen",
-      dark:  { bg: "#1e2420", colors: ["#7aab6e", "#c8d8a2", "#f4f1ea", "#3a5233"] },
-      light: { bg: "#f0f4eb", colors: ["#4a7a3c", "#1e2420", "#8fad7a", "#d8e8c2"] } },
-    { name: "Dried Petal",
-      dark:  { bg: "#2a1e1b", colors: ["#c47a6a", "#e8b89a", "#f2ddd5", "#7a5248"] },
-      light: { bg: "#f7ede8", colors: ["#a05040", "#7a3830", "#d4a090", "#3a2020"] } },
-    { name: "Sandstone",
-      dark:  { bg: "#28221a", colors: ["#d4b483", "#f0d9b0", "#a08050", "#e8c87a"] },
-      light: { bg: "#f5edd8", colors: ["#8a6830", "#5a4018", "#c4a060", "#2a1e08"] } },
-    // — Cool & Oceanic —
-    { name: "Glacier",
-      dark:  { bg: "#16282c", colors: ["#6fc4d6", "#f4f1ea", "#2c6e7f", "#e8a04e"] },
-      light: { bg: "#eef3f4", colors: ["#2c6e7f", "#16140f", "#9fc7cf", "#e8a04e"] } },
-    { name: "Arctic Mint",
-      dark:  { bg: "#081a1c", colors: ["#00e5c4", "#0ab8d4", "#f4f1ea", "#004d4a"] },
-      light: { bg: "#e8faf8", colors: ["#007a6a", "#005f7a", "#16140f", "#a8e8e2"] } },
-    { name: "Midnight Ocean",
-      dark:  { bg: "#040d1f", colors: ["#1a4fd6", "#00b4d8", "#90e0ef", "#f4f1ea"] },
-      light: { bg: "#e8f4fb", colors: ["#0a3a9a", "#006a8a", "#3a8abf", "#c0dff0"] } },
-    { name: "Deep Brine",
-      dark:  { bg: "#060e18", colors: ["#0066cc", "#00aaff", "#004488", "#88ddff"] },
-      light: { bg: "#dff0fa", colors: ["#003f88", "#0070c0", "#005fa0", "#b0ddf5"] } },
-    { name: "Seafoam",
-      dark:  { bg: "#0a1e1a", colors: ["#2dd4bf", "#67e8d4", "#0f766e", "#f0fdfa"] },
-      light: { bg: "#e6faf8", colors: ["#0d7a6a", "#0a5a50", "#2dd4bf", "#ccf5f0"] } },
-    // — Neon & Electric —
-    { name: "Acid Night",
-      dark:  { bg: "#0c0d0a", colors: ["#c8ff4d", "#1a1d14", "#f4f1ea", "#3a3f2c"] },
-      light: { bg: "#f6fbe9", colors: ["#5b8a00", "#1a1d14", "#dfeec2", "#3a3f2c"] } },
-    { name: "Neon Sunset",
-      dark:  { bg: "#0d0814", colors: ["#ff2d78", "#ff8c42", "#ffe548", "#c724f7"] },
-      light: { bg: "#fff0f5", colors: ["#d4006a", "#b85a00", "#c4a800", "#8b00c4"] } },
-    { name: "Electric Indigo",
-      dark:  { bg: "#08071a", colors: ["#5c4dff", "#00d4ff", "#ff4dc4", "#f4f1ea"] },
-      light: { bg: "#eeeeff", colors: ["#3a2ed4", "#007aaa", "#c4006a", "#1a1640"] } },
-    { name: "Cyber Lime",
-      dark:  { bg: "#080f08", colors: ["#39ff14", "#00ff88", "#ccff00", "#005522"] },
-      light: { bg: "#f0fce8", colors: ["#1a7a00", "#007a44", "#5faa00", "#002200"] } },
-    { name: "Hot Plasma",
-      dark:  { bg: "#0e0010", colors: ["#ff00cc", "#ff6600", "#ffcc00", "#cc00ff"] },
-      light: { bg: "#fff0fc", colors: ["#cc0088", "#cc4400", "#aa8800", "#8800cc"] } },
-    { name: "UV Rave",
-      dark:  { bg: "#07000f", colors: ["#bf00ff", "#00ffff", "#ff007f", "#7700ff"] },
-      light: { bg: "#f5eaff", colors: ["#7700cc", "#007a7a", "#cc005a", "#4400aa"] } },
-    // — Pastel & Soft —
-    { name: "Cotton Candy",
-      dark:  { bg: "#1a1020", colors: ["#ffb3d9", "#b3d9ff", "#d9ffb3", "#ffd9b3"] },
-      light: { bg: "#fff5fb", colors: ["#e080b0", "#70a0d0", "#80c070", "#d09050"] } },
-    { name: "Chalk Dust",
-      dark:  { bg: "#1c1c28", colors: ["#c8b8e8", "#b8d8c8", "#e8d8b8", "#d8b8c8"] },
-      light: { bg: "#f8f4ff", colors: ["#8060c0", "#406080", "#805030", "#804060"] } },
-    { name: "Peach Bloom",
-      dark:  { bg: "#201418", colors: ["#ffb09a", "#ffd0a0", "#ff90b0", "#c8a0d0"] },
-      light: { bg: "#fff8f5", colors: ["#d06040", "#c08030", "#b04060", "#8050a0"] } },
-    { name: "Baby Deco",
-      dark:  { bg: "#141a20", colors: ["#a8d8ea", "#f9e4b7", "#e8c5d8", "#c8e6c0"] },
-      light: { bg: "#f5faff", colors: ["#4a8aaa", "#a07820", "#905070", "#3a7040"] } },
-    // — Moody & Dark —
-    { name: "Ink & Bone",
-      dark:  { bg: "#16140f", colors: ["#f4f1ea", "#8a8166", "#b5532c", "#3a362c"] },
-      light: { bg: "#f4f1ea", colors: ["#16140f", "#8a8166", "#b5532c", "#cfc9b8"] } },
-    { name: "Cobalt Pop",
-      dark:  { bg: "#0e1b33", colors: ["#3e6df0", "#f4f1ea", "#e8a04e", "#1a2c52"] },
-      light: { bg: "#eaf0fb", colors: ["#2748b0", "#16140f", "#c9762e", "#aac0ec"] } },
-    { name: "Plum Static",
-      dark:  { bg: "#1f1326", colors: ["#9b5de5", "#f4f1ea", "#e8a04e", "#3a2747"] },
-      light: { bg: "#f1eaf7", colors: ["#7a3dc4", "#2a1f33", "#c9762e", "#d8c3ea"] } },
-    { name: "Blackcurrant",
-      dark:  { bg: "#120e16", colors: ["#7c4dff", "#ff6f91", "#f4f1ea", "#2a2233"] },
-      light: { bg: "#f3eefb", colors: ["#5c2ed1", "#c43f63", "#2a2233", "#d9c9f0"] } },
-    { name: "Bloodmoon",
-      dark:  { bg: "#0e0606", colors: ["#cc1a1a", "#ff5c3a", "#f4ede0", "#3a0a0a"] },
-      light: { bg: "#fdf0ec", colors: ["#aa1010", "#c4410a", "#2a0808", "#f0c4b8"] } },
-    { name: "Amber Noir",
-      dark:  { bg: "#100c00", colors: ["#f5a623", "#f7d06a", "#c47800", "#f4f1ea"] },
-      light: { bg: "#fdf8e8", colors: ["#a06800", "#6a3e00", "#d4a020", "#16140f"] } },
+    // — DARK MOODY —
+    // Deep backgrounds, one dominant accent, one contrast, two supporting
+    { name: "Ember",
+      dark:  { bg: "#0f0a08", colors: ["#e8490f", "#f5a623", "#ffffff", "#3a1a0a"] },
+      light: { bg: "#fdf3ec", colors: ["#c83200", "#a06010", "#1a0800", "#f0c090"] } },
+    { name: "Midnight",
+      dark:  { bg: "#080c18", colors: ["#4d7cfe", "#a0c4ff", "#ffffff", "#1a2240"] },
+      light: { bg: "#eef2ff", colors: ["#2040c0", "#0010a0", "#001080", "#90b0ff"] } },
     { name: "Obsidian",
-      dark:  { bg: "#080808", colors: ["#444444", "#888888", "#cccccc", "#222222"] },
-      light: { bg: "#f2f2f2", colors: ["#111111", "#555555", "#999999", "#dddddd"] } },
-    // — Warm & Rich —
-    { name: "Rose Quartz",
-      dark:  { bg: "#1a0f12", colors: ["#e8728c", "#f4a0b5", "#c44a6a", "#f4f1ea"] },
-      light: { bg: "#fdf0f3", colors: ["#c0395a", "#8a1a38", "#e8a0b5", "#3a1520"] } },
-    { name: "Velvet Room",
-      dark:  { bg: "#1a0a1a", colors: ["#cc44aa", "#ff88cc", "#882266", "#f4d0f0"] },
-      light: { bg: "#fceefa", colors: ["#aa2288", "#6a1060", "#dd66bb", "#2a0828"] } },
-    { name: "Saffron Dusk",
-      dark:  { bg: "#1c1000", colors: ["#ff9500", "#ffcc44", "#cc6600", "#fff0b0"] },
-      light: { bg: "#fffbe8", colors: ["#cc6600", "#884400", "#ffaa00", "#221100"] } },
-    // — Mono & Minimal —
-    { name: "Mono Slate",
-      dark:  { bg: "#222222", colors: ["#f4f1ea", "#888888", "#555555", "#cccccc"] },
-      light: { bg: "#f0f0f0", colors: ["#222222", "#777777", "#aaaaaa", "#444444"] } },
-    { name: "Warm Mono",
-      dark:  { bg: "#1e1a16", colors: ["#e8dfd0", "#b0a090", "#786858", "#f8f0e8"] },
-      light: { bg: "#f8f4ee", colors: ["#2a2018", "#6a5848", "#9a8878", "#c8b8a8"] } },
-    { name: "Cool Mono",
-      dark:  { bg: "#141820", colors: ["#d0d8e8", "#8898b8", "#485870", "#f0f4ff"] },
-      light: { bg: "#f0f4ff", colors: ["#182040", "#385070", "#6880a0", "#b0c0d8"] } },
+      dark:  { bg: "#0a0a0a", colors: ["#e0e0e0", "#888888", "#ffffff", "#333333"] },
+      light: { bg: "#f5f5f5", colors: ["#111111", "#444444", "#888888", "#cccccc"] } },
+    { name: "Blood Orange",
+      dark:  { bg: "#0d0505", colors: ["#ff3a00", "#ff8c42", "#ffffff", "#3a0a00"] },
+      light: { bg: "#fff4f0", colors: ["#cc2200", "#aa5500", "#1a0800", "#ffb090"] } },
+    { name: "Deep Purple",
+      dark:  { bg: "#0c0814", colors: ["#9b5de5", "#e040fb", "#ffffff", "#2a1040"] },
+      light: { bg: "#f5eeff", colors: ["#6010c0", "#9000c0", "#200060", "#d0a0ff"] } },
+    { name: "Sulfur",
+      dark:  { bg: "#0a0c00", colors: ["#d4ff00", "#88cc00", "#ffffff", "#2a3000"] },
+      light: { bg: "#f8ffe0", colors: ["#5a7a00", "#3a5000", "#1a2000", "#aadd00"] } },
+    { name: "Void",
+      dark:  { bg: "#050508", colors: ["#00e5ff", "#0090ff", "#ffffff", "#001830"] },
+      light: { bg: "#e8f8ff", colors: ["#0060b0", "#0030a0", "#001050", "#80d0ff"] } },
+    { name: "Charcoal Rose",
+      dark:  { bg: "#100c0e", colors: ["#ff4d6d", "#ff8fa3", "#ffffff", "#3a1020"] },
+      light: { bg: "#fff0f3", colors: ["#c0002a", "#800020", "#1a0010", "#ff9090"] } },
+    // — VIBRANT / NEON —
+    // True neon: saturated, glowing, meant for dark mode
+    { name: "Neon Tokyo",
+      dark:  { bg: "#08050f", colors: ["#ff00aa", "#00ffcc", "#ffe600", "#7700ff"] },
+      light: { bg: "#f0eaff", colors: ["#cc0088", "#008866", "#aa8800", "#5500cc"] } },
+    { name: "Acid",
+      dark:  { bg: "#080f00", colors: ["#aaff00", "#00ffaa", "#ffffff", "#224400"] },
+      light: { bg: "#f0ffe0", colors: ["#448800", "#006644", "#001a00", "#88dd00"] } },
+    { name: "Plasma",
+      dark:  { bg: "#0a0014", colors: ["#ff0080", "#8000ff", "#00ccff", "#ff6600"] },
+      light: { bg: "#ffeeff", colors: ["#aa0060", "#5500cc", "#0066aa", "#cc4400"] } },
+    { name: "Synthwave",
+      dark:  { bg: "#0d0020", colors: ["#ff2fff", "#00e5ff", "#ff8800", "#7700ff"] },
+      light: { bg: "#f5eaff", colors: ["#aa00aa", "#007799", "#aa5500", "#5500cc"] } },
+    { name: "Infrared",
+      dark:  { bg: "#100000", colors: ["#ff1a00", "#ff6600", "#ffcc00", "#660000"] },
+      light: { bg: "#fff5f0", colors: ["#cc1000", "#aa4400", "#886600", "#ff6040"] } },
+    // — NATURAL / WARM —
+    // Earthy, muted, analog feel — good contrast, no muddy mixes
+    { name: "Terracotta",
+      dark:  { bg: "#1c1208", colors: ["#c45e2a", "#e8a060", "#f0dcc0", "#4a3018"] },
+      light: { bg: "#f8efe4", colors: ["#a04020", "#703010", "#2a1008", "#e0a060"] } },
+    { name: "Desert Sand",
+      dark:  { bg: "#1a1408", colors: ["#d4a855", "#e8c880", "#f5e8c0", "#5a4020"] },
+      light: { bg: "#fdf5e0", colors: ["#886020", "#604010", "#1e1008", "#c8960a"] } },
+    { name: "Forest",
+      dark:  { bg: "#0a1408", colors: ["#4a8c3f", "#8fbc6a", "#d0e8b0", "#1a3010"] },
+      light: { bg: "#edf5e8", colors: ["#2a6020", "#1a4018", "#0a1808", "#70a050"] } },
+    { name: "Olive Drab",
+      dark:  { bg: "#10120a", colors: ["#8a9a30", "#c0cc60", "#e8e8b0", "#303818"] },
+      light: { bg: "#f5f5e0", colors: ["#505a10", "#303800", "#101800", "#a0aa40"] } },
+    { name: "Clay",
+      dark:  { bg: "#180e0a", colors: ["#b86840", "#e09a6a", "#f0d0b0", "#4a2010"] },
+      light: { bg: "#faf0e8", colors: ["#904828", "#603018", "#200c08", "#d08050"] } },
+    { name: "Dusk",
+      dark:  { bg: "#140c18", colors: ["#d4607a", "#e8a0a8", "#f0d0c0", "#6a2040"] },
+      light: { bg: "#fdf0f3", colors: ["#a02840", "#702030", "#200010", "#e09090"] } },
+    { name: "Moss",
+      dark:  { bg: "#0c1610", colors: ["#3a7a50", "#70b070", "#c0ddb0", "#18381e"] },
+      light: { bg: "#edf8f0", colors: ["#1a5830", "#0a3820", "#041808", "#60a060"] } },
+    { name: "Rust",
+      dark:  { bg: "#140a04", colors: ["#c04820", "#e08040", "#f0c090", "#4a1808"] },
+      light: { bg: "#fdf0e8", colors: ["#a03010", "#702008", "#1e0808", "#e07040"] } },
+    // — COOL / OCEANIC —
+    // Blues, teals, cyans — clean and minimal
+    { name: "Ocean",
+      dark:  { bg: "#04101c", colors: ["#0088cc", "#00c8e8", "#a0e0f8", "#002a48"] },
+      light: { bg: "#e8f6fc", colors: ["#005888", "#003a6a", "#001830", "#60c0e8"] } },
+    { name: "Teal",
+      dark:  { bg: "#041414", colors: ["#009988", "#00ccaa", "#a0eedf", "#002a28"] },
+      light: { bg: "#e8faf7", colors: ["#006858", "#004038", "#001818", "#40c0a0"] } },
+    { name: "Arctic",
+      dark:  { bg: "#060e14", colors: ["#40a0cc", "#80ccee", "#d0eeff", "#102030"] },
+      light: { bg: "#edf6fc", colors: ["#1060a0", "#083060", "#041828", "#70b8e8"] } },
+    { name: "Cobalt",
+      dark:  { bg: "#06081e", colors: ["#2248e8", "#6080ff", "#c0d0ff", "#0c1448"] },
+      light: { bg: "#eef1ff", colors: ["#1430c0", "#0820a0", "#040c60", "#7090ff"] } },
+    // — MINIMAL / MONO —
+    // One or two hue families, clean structure
+    { name: "Warm Paper",
+      dark:  { bg: "#181410", colors: ["#d8cdb8", "#a09080", "#685848", "#f5f0e8"] },
+      light: { bg: "#f8f4ee", colors: ["#2a2018", "#5a4838", "#8a7868", "#c8baa8"] } },
+    { name: "Cool Steel",
+      dark:  { bg: "#0e1218", colors: ["#c0ccd8", "#8898a8", "#506070", "#e8eef4"] },
+      light: { bg: "#f0f4f8", colors: ["#1a2838", "#384858", "#607080", "#b0bec8"] } },
+    { name: "Sepia",
+      dark:  { bg: "#120e08", colors: ["#c0a060", "#e0c890", "#f5e8c0", "#3a2c10"] },
+      light: { bg: "#fdf8ee", colors: ["#604820", "#402808", "#180e00", "#c09840"] } },
   ];
 
   const PATTERN_DEFS = [
-    { id: "solid",     label: "Solid Color" },
-    { id: "stripes",   label: "Stripes" },
-    { id: "grid",      label: "Grid" },
-    { id: "dots",      label: "Dot Field" },
-    { id: "waves",     label: "Waves" },
-    { id: "blobs",     label: "Blobs" },
-    { id: "triangles", label: "Triangles" },
-    { id: "rings",     label: "Rings" },
-    { id: "shards",    label: "Shards" },
-    { id: "scatter",   label: "Scatter Marks" },
-    { id: "voronoi",   label: "Voronoi" },
-    { id: "hexgrid",   label: "Hex Grid" },
-    { id: "noise",     label: "Noise Field" },
-    { id: "spiral",    label: "Spiral" },
+    { id: "solid",      label: "Solid Color" },
+    { id: "stripes",    label: "Stripes" },
+    { id: "grid",       label: "Grid" },
+    { id: "dots",       label: "Dot Field" },
+    { id: "waves",      label: "Waves" },
+    { id: "triangles",  label: "Triangles" },
+    { id: "shards",     label: "Shards" },
+    { id: "scatter",    label: "Scatter Marks" },
+    { id: "hexgrid",    label: "Hex Grid" },
+    { id: "spiral",     label: "Spiral" },
     { id: "crosshatch", label: "Crosshatch" },
-    { id: "confetti",  label: "Confetti" },
-    { id: "gradient",  label: "Gradient" },
-    { id: "checker",   label: "Checker" },
-    { id: "chevron",   label: "Chevron" },
-    { id: "ripple",    label: "Ripple" },
-    { id: "arches",    label: "Arches" },
-    { id: "glassbars", label: "Glass Bars" },
+    { id: "confetti",   label: "Confetti" },
+    { id: "gradient",   label: "Gradient" },
+    { id: "checker",    label: "Checker" },
+    { id: "chevron",    label: "Chevron" },
+    { id: "ripple",     label: "Ripple" },
     { id: "diamondnet", label: "Diamond Net" },
-    { id: "starburst",  label: "Starburst" },
     { id: "circuit",    label: "Circuit" },
-    { id: "brushstroke",label: "Brushstrokes" },
-    { id: "topography", label: "Topography" },
+    { id: "halftone",   label: "Halftone" },
+    { id: "mosaic",     label: "Mosaic" },
+    { id: "weave",      label: "Weave" },
   ];
 
   // ---------- State ----------
   const state = {
     device: "phone",
     sizeIdx: 2,
-    pattern: "blobs",
+    pattern: "stripes",
     paletteIdx: 0,
     mode: "dark",
     density: 5,
@@ -251,7 +224,7 @@
   function renderThumb(canvas, patternId) {
     const tctx = canvas.getContext('2d');
     const pal = activePalette();
-    const fn = RENDERERS[patternId] || drawBlobs;
+    const fn = RENDERERS[patternId] || drawStripes;
     const savedRand = rand;
     rand = mulberry32(currentSeed ^ (patternId.length * 7919) ^ state.paletteIdx ^ 1337);
     fn(tctx, THUMB_SIZE, THUMB_SIZE, pal, state.density);
@@ -381,19 +354,17 @@
 
   // Pattern → palette affinity groups for smart combos
   const PATTERN_PALETTE_AFFINITY = {
-    neon:    ["Acid Night","Neon Sunset","Electric Indigo","Cyber Lime","Hot Plasma","UV Rave","Bloodmoon"],
-    organic: ["Terracotta Dusk","Paper & Rust","Deep Moss","Clay Sand","Citrus Field","Sage Linen","Dried Petal","Sandstone","Warm Mono"],
-    cool:    ["Glacier","Arctic Mint","Midnight Ocean","Deep Brine","Seafoam","Cool Mono","Cobalt Pop"],
-    moody:   ["Ink & Bone","Plum Static","Blackcurrant","Amber Noir","Obsidian","Velvet Room","Saffron Dusk"],
-    soft:    ["Cotton Candy","Chalk Dust","Peach Bloom","Baby Deco","Rose Quartz"],
+    neon:    ["Neon Tokyo","Acid","Plasma","Synthwave","Infrared","Void","Sulfur"],
+    organic: ["Terracotta","Desert Sand","Forest","Clay","Moss","Rust","Dusk","Olive Drab"],
+    cool:    ["Ocean","Teal","Arctic","Cobalt","Void","Midnight"],
+    moody:   ["Midnight","Obsidian","Deep Purple","Ember","Charcoal Rose","Sepia","Warm Paper","Cool Steel","Blood Orange"],
+    warm:    ["Ember","Terracotta","Desert Sand","Clay","Rust","Dusk","Sepia"],
   };
   const PATTERN_MOOD = {
-    stripes:"organic", grid:"cool", dots:"soft", waves:"cool", blobs:"organic",
-    triangles:"moody", rings:"cool", shards:"neon", scatter:"soft", voronoi:"organic",
-    hexgrid:"cool", noise:"moody", spiral:"neon", crosshatch:"moody", confetti:"soft",
-    gradient:"neon", checker:"moody", chevron:"organic", ripple:"cool", arches:"organic",
-    glassbars:"neon", diamondnet:"cool", starburst:"neon", circuit:"neon",
-    brushstroke:"organic", topography:"organic",
+    stripes:"organic", grid:"cool", dots:"warm", waves:"cool", triangles:"moody",
+    shards:"neon", scatter:"warm", hexgrid:"cool", spiral:"neon", crosshatch:"moody",
+    confetti:"warm", gradient:"neon", checker:"moody", chevron:"organic", ripple:"cool",
+    diamondnet:"cool", circuit:"neon", halftone:"moody", mosaic:"organic", weave:"organic",
   };
 
   document.getElementById('randomBtn').addEventListener('click', () => {
@@ -427,7 +398,7 @@
     [...paletteGrid.children].forEach((c, i) => c.classList.toggle('active', i === state.paletteIdx));
 
     // Mode: bias dark for neon patterns
-    const darkBias = mood === 'neon' ? 0.8 : 0.5;
+    const darkBias = (mood === 'neon' || mood === 'moody') ? 0.85 : 0.5;
     state.mode = Math.random() < darkBias ? 'dark' : 'light';
     [...modeSeg.children].forEach(c => c.classList.toggle('active', c.dataset.mode === state.mode));
 
@@ -1043,44 +1014,124 @@
   function drawCircuit(ctx, w, h, pal, density) {
     ctx.fillStyle = pal.bg;
     ctx.fillRect(0, 0, w, h);
-    const grid = Math.round(lerp(8, 28, density / 10));
-    const cellW = w / grid;
+    const cols = Math.round(lerp(8, 28, density / 10));
+    const cellW = w / cols;
+    const rows = Math.ceil(h / cellW);
     const nodeR = cellW * 0.12;
     ctx.lineWidth = Math.max(1, cellW * 0.08);
     const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
-    // draw wires
-    for (let y = 0; y < grid; y++) {
-      for (let x = 0; x < grid; x++) {
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
         if (rand() > 0.45) continue;
         const cx = (x + 0.5) * cellW, cy = (y + 0.5) * cellW;
         const [dx, dy] = pick(dirs);
         const nx = (x + dx + 0.5) * cellW;
         const ny = (y + dy + 0.5) * cellW;
         if (nx < 0 || nx > w || ny < 0 || ny > h) continue;
-        const col = pick(pal.colors);
-        ctx.strokeStyle = rgbaFix(col, lerp(0.3, 0.8, rand()));
+        ctx.strokeStyle = rgbaFix(pick(pal.colors), lerp(0.3, 0.8, rand()));
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        // L-shaped trace
         if (rand() > 0.5) {
-          ctx.lineTo(nx, cy);
-          ctx.lineTo(nx, ny);
+          ctx.lineTo(nx, cy); ctx.lineTo(nx, ny);
         } else {
-          ctx.lineTo(cx, ny);
-          ctx.lineTo(nx, ny);
+          ctx.lineTo(cx, ny); ctx.lineTo(nx, ny);
         }
         ctx.stroke();
       }
     }
-    // draw nodes
-    for (let y = 0; y < grid; y++) {
-      for (let x = 0; x < grid; x++) {
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
         if (rand() > 0.3) continue;
         const cx = (x + 0.5) * cellW, cy = (y + 0.5) * cellW;
         ctx.beginPath();
         ctx.arc(cx, cy, nodeR * lerp(0.5, 1.8, rand()), 0, Math.PI * 2);
         ctx.fillStyle = rgbaFix(pick(pal.colors), lerp(0.6, 1, rand()));
         ctx.fill();
+      }
+    }
+  }
+
+  function drawHalftone(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const cols = Math.round(lerp(20, 80, density / 10));
+    const cell = w / cols;
+    const rows = Math.ceil(h / cell) + 1;
+    const angle = pick([0, 15, 30, 45]) * Math.PI / 180;
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate(angle);
+    const diag = Math.sqrt(w * w + h * h);
+    const gcols = Math.ceil(diag / cell) + 2;
+    const grows = Math.ceil(diag / cell) + 2;
+    for (let row = -grows; row < grows; row++) {
+      for (let col = -gcols; col < gcols; col++) {
+        const cx = col * cell + (row % 2 === 0 ? 0 : cell * 0.5);
+        const cy = row * cell;
+        // map center back to canvas coords to sample a "brightness" value
+        const wx = cx + w / 2;
+        const wy = cy + h / 2;
+        const nx = wx / w, ny = wy / h;
+        const v = (Math.sin(nx * Math.PI * 3 + rand() * 0.3) * 0.5 + 0.5) *
+                  (Math.cos(ny * Math.PI * 5 + rand() * 0.3) * 0.5 + 0.5);
+        const r = cell * 0.48 * lerp(0.05, 0.95, v);
+        if (r < 0.5) continue;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = rgbaFix(pick(pal.colors), lerp(0.5, 1, v));
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+    void rows; void cols;
+  }
+
+  function drawMosaic(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const cols = Math.round(lerp(6, 28, density / 10));
+    const cell = w / cols;
+    const rows = Math.ceil(h / cell) + 1;
+    const groutW = Math.max(1, cell * 0.06);
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        // slight random offset per tile for organic feel
+        const ox = (rand() - 0.5) * cell * 0.08;
+        const oy = (rand() - 0.5) * cell * 0.08;
+        const x = col * cell + groutW / 2 + ox;
+        const y = row * cell + groutW / 2 + oy;
+        const s = cell - groutW + (rand() - 0.5) * groutW * 0.5;
+        if (rand() > 0.88) continue; // occasional missing tile
+        ctx.fillStyle = rgbaFix(pick(pal.colors), lerp(0.65, 1, rand()));
+        ctx.fillRect(x, y, s, s);
+      }
+    }
+  }
+
+  function drawWeave(ctx, w, h, pal, density) {
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, w, h);
+    const count = Math.round(lerp(8, 36, density / 10));
+    const gap = w / count;
+    const stripW = gap * lerp(0.55, 0.75, rand());
+    const colorH = pick(pal.colors);
+    const colorV = pick(pal.colors.filter(c => c !== colorH) .length ? pal.colors.filter(c => c !== colorH) : pal.colors);
+    const rowCount = Math.ceil(h / gap) + 1;
+    // horizontal strands (drawn behind)
+    for (let r = 0; r < rowCount; r++) {
+      const y = r * gap;
+      ctx.fillStyle = rgbaFix(colorH, lerp(0.7, 1, rand()));
+      ctx.fillRect(0, y, w, stripW);
+    }
+    // vertical strands with alternating over/under clip
+    for (let c = 0; c < count; c++) {
+      const x = c * gap;
+      for (let r = 0; r < rowCount; r++) {
+        const over = (c + r) % 2 === 0;
+        if (!over) continue; // under = hidden behind horizontal
+        const y = r * gap;
+        ctx.fillStyle = rgbaFix(colorV, lerp(0.7, 1, rand()));
+        ctx.fillRect(x, y - gap * 0.3, stripW, gap * 1.6);
       }
     }
   }
@@ -1169,33 +1220,27 @@
   }
 
   const RENDERERS = {
-    stripes: drawStripes,
-    grid: drawGrid,
-    dots: drawDots,
-    waves: drawWaves,
-    blobs: drawBlobs,
-    triangles: drawTriangles,
-    rings: drawRings,
-    shards: drawShards,
-    scatter: drawScatter,
-    voronoi: drawVoronoi,
-    hexgrid: drawHexgrid,
-    noise: drawNoise,
-    spiral: drawSpiral,
+    stripes:    drawStripes,
+    grid:       drawGrid,
+    dots:       drawDots,
+    waves:      drawWaves,
+    triangles:  drawTriangles,
+    shards:     drawShards,
+    scatter:    drawScatter,
+    hexgrid:    drawHexgrid,
+    spiral:     drawSpiral,
     crosshatch: drawCrosshatch,
-    confetti: drawConfetti,
-    solid: drawSolid,
-    gradient: drawGradient,
-    checker: drawChecker,
-    chevron: drawChevron,
-    ripple: drawRipple,
-    arches: drawArches,
-    glassbars: drawGlassbars,
+    confetti:   drawConfetti,
+    solid:      drawSolid,
+    gradient:   drawGradient,
+    checker:    drawChecker,
+    chevron:    drawChevron,
+    ripple:     drawRipple,
     diamondnet: drawDiamondNet,
-    starburst: drawStarburst,
-    circuit: drawCircuit,
-    brushstroke: drawBrushstroke,
-    topography: drawTopography,
+    circuit:    drawCircuit,
+    halftone:   drawHalftone,
+    mosaic:     drawMosaic,
+    weave:      drawWeave,
   };
 
   function addGrain(ctx, w, h, amount) {
@@ -1222,7 +1267,7 @@
     frameLabel.textContent = `${dims.w} × ${dims.h}`;
 
     const pal = activePalette();
-    const fn = RENDERERS[state.pattern] || drawBlobs;
+    const fn = RENDERERS[state.pattern] || drawStripes;
 
     // Use a frozen rng draw per render based on currentSeed, deterministic per reroll
     const localRand = mulberry32(currentSeed ^ (state.pattern.length * 7919) ^ state.paletteIdx ^ (dims.w + dims.h));
