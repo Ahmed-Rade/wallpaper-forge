@@ -53,66 +53,121 @@
   // ---------- Palettes (each: bg + array of accent colors) ----------
   // Each palette ships a dark variant (default) and a light variant.
   const PALETTES = [
+    // — Earth & Organic —
     { name: "Terracotta Dusk",
       dark:  { bg: "#241f1a", colors: ["#b5532c", "#e8a04e", "#f4f1ea", "#5c6e4f"] },
       light: { bg: "#f4ece1", colors: ["#b5532c", "#a3742f", "#3a3026", "#5c6e4f"] } },
-    { name: "Acid Night",
-      dark:  { bg: "#0c0d0a", colors: ["#c8ff4d", "#1a1d14", "#f4f1ea", "#3a3f2c"] },
-      light: { bg: "#f6fbe9", colors: ["#5b8a00", "#1a1d14", "#dfeec2", "#3a3f2c"] } },
     { name: "Paper & Rust",
       dark:  { bg: "#3a342c", colors: ["#e8895a", "#f4f1ea", "#bdb18f", "#8aa179"] },
       light: { bg: "#f4f1ea", colors: ["#b5532c", "#16140f", "#8a8166", "#5c6e4f"] } },
     { name: "Deep Moss",
       dark:  { bg: "#1b2417", colors: ["#5c6e4f", "#a9b88c", "#f4f1ea", "#3d4a32"] },
       light: { bg: "#eef2e9", colors: ["#4a5c3d", "#1b2417", "#7c8f63", "#cdd9bb"] } },
+    { name: "Clay Sand",
+      dark:  { bg: "#2c2418", colors: ["#d97a45", "#f4f1ea", "#a3936c", "#5c6e4f"] },
+      light: { bg: "#e4d8bf", colors: ["#b5532c", "#16140f", "#7a6a4f", "#f4f1ea"] } },
+    { name: "Citrus Field",
+      dark:  { bg: "#2c2410", colors: ["#e8a04e", "#d97a45", "#f4f1ea", "#7c8f63"] },
+      light: { bg: "#fdf4dc", colors: ["#e8a04e", "#b5532c", "#16140f", "#5c6e4f"] } },
+    { name: "Sage Linen",
+      dark:  { bg: "#1e2420", colors: ["#7aab6e", "#c8d8a2", "#f4f1ea", "#3a5233"] },
+      light: { bg: "#f0f4eb", colors: ["#4a7a3c", "#1e2420", "#8fad7a", "#d8e8c2"] } },
+    { name: "Dried Petal",
+      dark:  { bg: "#2a1e1b", colors: ["#c47a6a", "#e8b89a", "#f2ddd5", "#7a5248"] },
+      light: { bg: "#f7ede8", colors: ["#a05040", "#7a3830", "#d4a090", "#3a2020"] } },
+    { name: "Sandstone",
+      dark:  { bg: "#28221a", colors: ["#d4b483", "#f0d9b0", "#a08050", "#e8c87a"] },
+      light: { bg: "#f5edd8", colors: ["#8a6830", "#5a4018", "#c4a060", "#2a1e08"] } },
+    // — Cool & Oceanic —
+    { name: "Glacier",
+      dark:  { bg: "#16282c", colors: ["#6fc4d6", "#f4f1ea", "#2c6e7f", "#e8a04e"] },
+      light: { bg: "#eef3f4", colors: ["#2c6e7f", "#16140f", "#9fc7cf", "#e8a04e"] } },
+    { name: "Arctic Mint",
+      dark:  { bg: "#081a1c", colors: ["#00e5c4", "#0ab8d4", "#f4f1ea", "#004d4a"] },
+      light: { bg: "#e8faf8", colors: ["#007a6a", "#005f7a", "#16140f", "#a8e8e2"] } },
+    { name: "Midnight Ocean",
+      dark:  { bg: "#040d1f", colors: ["#1a4fd6", "#00b4d8", "#90e0ef", "#f4f1ea"] },
+      light: { bg: "#e8f4fb", colors: ["#0a3a9a", "#006a8a", "#3a8abf", "#c0dff0"] } },
+    { name: "Deep Brine",
+      dark:  { bg: "#060e18", colors: ["#0066cc", "#00aaff", "#004488", "#88ddff"] },
+      light: { bg: "#dff0fa", colors: ["#003f88", "#0070c0", "#005fa0", "#b0ddf5"] } },
+    { name: "Seafoam",
+      dark:  { bg: "#0a1e1a", colors: ["#2dd4bf", "#67e8d4", "#0f766e", "#f0fdfa"] },
+      light: { bg: "#e6faf8", colors: ["#0d7a6a", "#0a5a50", "#2dd4bf", "#ccf5f0"] } },
+    // — Neon & Electric —
+    { name: "Acid Night",
+      dark:  { bg: "#0c0d0a", colors: ["#c8ff4d", "#1a1d14", "#f4f1ea", "#3a3f2c"] },
+      light: { bg: "#f6fbe9", colors: ["#5b8a00", "#1a1d14", "#dfeec2", "#3a3f2c"] } },
+    { name: "Neon Sunset",
+      dark:  { bg: "#0d0814", colors: ["#ff2d78", "#ff8c42", "#ffe548", "#c724f7"] },
+      light: { bg: "#fff0f5", colors: ["#d4006a", "#b85a00", "#c4a800", "#8b00c4"] } },
+    { name: "Electric Indigo",
+      dark:  { bg: "#08071a", colors: ["#5c4dff", "#00d4ff", "#ff4dc4", "#f4f1ea"] },
+      light: { bg: "#eeeeff", colors: ["#3a2ed4", "#007aaa", "#c4006a", "#1a1640"] } },
+    { name: "Cyber Lime",
+      dark:  { bg: "#080f08", colors: ["#39ff14", "#00ff88", "#ccff00", "#005522"] },
+      light: { bg: "#f0fce8", colors: ["#1a7a00", "#007a44", "#5faa00", "#002200"] } },
+    { name: "Hot Plasma",
+      dark:  { bg: "#0e0010", colors: ["#ff00cc", "#ff6600", "#ffcc00", "#cc00ff"] },
+      light: { bg: "#fff0fc", colors: ["#cc0088", "#cc4400", "#aa8800", "#8800cc"] } },
+    { name: "UV Rave",
+      dark:  { bg: "#07000f", colors: ["#bf00ff", "#00ffff", "#ff007f", "#7700ff"] },
+      light: { bg: "#f5eaff", colors: ["#7700cc", "#007a7a", "#cc005a", "#4400aa"] } },
+    // — Pastel & Soft —
+    { name: "Cotton Candy",
+      dark:  { bg: "#1a1020", colors: ["#ffb3d9", "#b3d9ff", "#d9ffb3", "#ffd9b3"] },
+      light: { bg: "#fff5fb", colors: ["#e080b0", "#70a0d0", "#80c070", "#d09050"] } },
+    { name: "Chalk Dust",
+      dark:  { bg: "#1c1c28", colors: ["#c8b8e8", "#b8d8c8", "#e8d8b8", "#d8b8c8"] },
+      light: { bg: "#f8f4ff", colors: ["#8060c0", "#406080", "#805030", "#804060"] } },
+    { name: "Peach Bloom",
+      dark:  { bg: "#201418", colors: ["#ffb09a", "#ffd0a0", "#ff90b0", "#c8a0d0"] },
+      light: { bg: "#fff8f5", colors: ["#d06040", "#c08030", "#b04060", "#8050a0"] } },
+    { name: "Baby Deco",
+      dark:  { bg: "#141a20", colors: ["#a8d8ea", "#f9e4b7", "#e8c5d8", "#c8e6c0"] },
+      light: { bg: "#f5faff", colors: ["#4a8aaa", "#a07820", "#905070", "#3a7040"] } },
+    // — Moody & Dark —
     { name: "Ink & Bone",
       dark:  { bg: "#16140f", colors: ["#f4f1ea", "#8a8166", "#b5532c", "#3a362c"] },
       light: { bg: "#f4f1ea", colors: ["#16140f", "#8a8166", "#b5532c", "#cfc9b8"] } },
     { name: "Cobalt Pop",
       dark:  { bg: "#0e1b33", colors: ["#3e6df0", "#f4f1ea", "#e8a04e", "#1a2c52"] },
       light: { bg: "#eaf0fb", colors: ["#2748b0", "#16140f", "#c9762e", "#aac0ec"] } },
-    { name: "Clay Sand",
-      dark:  { bg: "#2c2418", colors: ["#d97a45", "#f4f1ea", "#a3936c", "#5c6e4f"] },
-      light: { bg: "#e4d8bf", colors: ["#b5532c", "#16140f", "#7a6a4f", "#f4f1ea"] } },
     { name: "Plum Static",
       dark:  { bg: "#1f1326", colors: ["#9b5de5", "#f4f1ea", "#e8a04e", "#3a2747"] },
       light: { bg: "#f1eaf7", colors: ["#7a3dc4", "#2a1f33", "#c9762e", "#d8c3ea"] } },
-    { name: "Mono Slate",
-      dark:  { bg: "#222222", colors: ["#f4f1ea", "#888888", "#555555", "#cccccc"] },
-      light: { bg: "#f0f0f0", colors: ["#222222", "#777777", "#aaaaaa", "#444444"] } },
-    { name: "Citrus Field",
-      dark:  { bg: "#2c2410", colors: ["#e8a04e", "#d97a45", "#f4f1ea", "#7c8f63"] },
-      light: { bg: "#fdf4dc", colors: ["#e8a04e", "#b5532c", "#16140f", "#5c6e4f"] } },
     { name: "Blackcurrant",
       dark:  { bg: "#120e16", colors: ["#7c4dff", "#ff6f91", "#f4f1ea", "#2a2233"] },
       light: { bg: "#f3eefb", colors: ["#5c2ed1", "#c43f63", "#2a2233", "#d9c9f0"] } },
-    { name: "Glacier",
-      dark:  { bg: "#16282c", colors: ["#6fc4d6", "#f4f1ea", "#2c6e7f", "#e8a04e"] },
-      light: { bg: "#eef3f4", colors: ["#2c6e7f", "#16140f", "#9fc7cf", "#e8a04e"] } },
-    { name: "Neon Sunset",
-      dark:  { bg: "#0d0814", colors: ["#ff2d78", "#ff8c42", "#ffe548", "#c724f7"] },
-      light: { bg: "#fff0f5", colors: ["#d4006a", "#b85a00", "#c4a800", "#8b00c4"] } },
-    { name: "Arctic Mint",
-      dark:  { bg: "#081a1c", colors: ["#00e5c4", "#0ab8d4", "#f4f1ea", "#004d4a"] },
-      light: { bg: "#e8faf8", colors: ["#007a6a", "#005f7a", "#16140f", "#a8e8e2"] } },
     { name: "Bloodmoon",
       dark:  { bg: "#0e0606", colors: ["#cc1a1a", "#ff5c3a", "#f4ede0", "#3a0a0a"] },
       light: { bg: "#fdf0ec", colors: ["#aa1010", "#c4410a", "#2a0808", "#f0c4b8"] } },
-    { name: "Sage Linen",
-      dark:  { bg: "#1e2420", colors: ["#7aab6e", "#c8d8a2", "#f4f1ea", "#3a5233"] },
-      light: { bg: "#f0f4eb", colors: ["#4a7a3c", "#1e2420", "#8fad7a", "#d8e8c2"] } },
-    { name: "Electric Indigo",
-      dark:  { bg: "#08071a", colors: ["#5c4dff", "#00d4ff", "#ff4dc4", "#f4f1ea"] },
-      light: { bg: "#eeeeff", colors: ["#3a2ed4", "#007aaa", "#c4006a", "#1a1640"] } },
     { name: "Amber Noir",
       dark:  { bg: "#100c00", colors: ["#f5a623", "#f7d06a", "#c47800", "#f4f1ea"] },
       light: { bg: "#fdf8e8", colors: ["#a06800", "#6a3e00", "#d4a020", "#16140f"] } },
+    { name: "Obsidian",
+      dark:  { bg: "#080808", colors: ["#444444", "#888888", "#cccccc", "#222222"] },
+      light: { bg: "#f2f2f2", colors: ["#111111", "#555555", "#999999", "#dddddd"] } },
+    // — Warm & Rich —
     { name: "Rose Quartz",
       dark:  { bg: "#1a0f12", colors: ["#e8728c", "#f4a0b5", "#c44a6a", "#f4f1ea"] },
       light: { bg: "#fdf0f3", colors: ["#c0395a", "#8a1a38", "#e8a0b5", "#3a1520"] } },
-    { name: "Midnight Ocean",
-      dark:  { bg: "#040d1f", colors: ["#1a4fd6", "#00b4d8", "#90e0ef", "#f4f1ea"] },
-      light: { bg: "#e8f4fb", colors: ["#0a3a9a", "#006a8a", "#3a8abf", "#c0dff0"] } },
+    { name: "Velvet Room",
+      dark:  { bg: "#1a0a1a", colors: ["#cc44aa", "#ff88cc", "#882266", "#f4d0f0"] },
+      light: { bg: "#fceefa", colors: ["#aa2288", "#6a1060", "#dd66bb", "#2a0828"] } },
+    { name: "Saffron Dusk",
+      dark:  { bg: "#1c1000", colors: ["#ff9500", "#ffcc44", "#cc6600", "#fff0b0"] },
+      light: { bg: "#fffbe8", colors: ["#cc6600", "#884400", "#ffaa00", "#221100"] } },
+    // — Mono & Minimal —
+    { name: "Mono Slate",
+      dark:  { bg: "#222222", colors: ["#f4f1ea", "#888888", "#555555", "#cccccc"] },
+      light: { bg: "#f0f0f0", colors: ["#222222", "#777777", "#aaaaaa", "#444444"] } },
+    { name: "Warm Mono",
+      dark:  { bg: "#1e1a16", colors: ["#e8dfd0", "#b0a090", "#786858", "#f8f0e8"] },
+      light: { bg: "#f8f4ee", colors: ["#2a2018", "#6a5848", "#9a8878", "#c8b8a8"] } },
+    { name: "Cool Mono",
+      dark:  { bg: "#141820", colors: ["#d0d8e8", "#8898b8", "#485870", "#f0f4ff"] },
+      light: { bg: "#f0f4ff", colors: ["#182040", "#385070", "#6880a0", "#b0c0d8"] } },
   ];
 
   const PATTERN_DEFS = [
@@ -324,27 +379,78 @@
     refreshThumbs();
   });
 
+  // Pattern → palette affinity groups for smart combos
+  const PATTERN_PALETTE_AFFINITY = {
+    neon:    ["Acid Night","Neon Sunset","Electric Indigo","Cyber Lime","Hot Plasma","UV Rave","Bloodmoon"],
+    organic: ["Terracotta Dusk","Paper & Rust","Deep Moss","Clay Sand","Citrus Field","Sage Linen","Dried Petal","Sandstone","Warm Mono"],
+    cool:    ["Glacier","Arctic Mint","Midnight Ocean","Deep Brine","Seafoam","Cool Mono","Cobalt Pop"],
+    moody:   ["Ink & Bone","Plum Static","Blackcurrant","Amber Noir","Obsidian","Velvet Room","Saffron Dusk"],
+    soft:    ["Cotton Candy","Chalk Dust","Peach Bloom","Baby Deco","Rose Quartz"],
+  };
+  const PATTERN_MOOD = {
+    stripes:"organic", grid:"cool", dots:"soft", waves:"cool", blobs:"organic",
+    triangles:"moody", rings:"cool", shards:"neon", scatter:"soft", voronoi:"organic",
+    hexgrid:"cool", noise:"moody", spiral:"neon", crosshatch:"moody", confetti:"soft",
+    gradient:"neon", checker:"moody", chevron:"organic", ripple:"cool", arches:"organic",
+    glassbars:"neon", diamondnet:"cool", starburst:"neon", circuit:"neon",
+    brushstroke:"organic", topography:"organic",
+  };
+
   document.getElementById('randomBtn').addEventListener('click', () => {
-    // Random pattern (exclude solid for more visual interest)
+    // Flash animation
+    const btn = document.getElementById('randomBtn');
+    btn.style.transition = 'background 0.08s, color 0.08s';
+    btn.style.background = 'var(--rust)';
+    btn.style.color = 'var(--paper)';
+    setTimeout(() => { btn.style.background = ''; btn.style.color = ''; }, 180);
+
+    // Random pattern (exclude solid)
     const visualPatterns = PATTERN_DEFS.filter(p => p.id !== 'solid');
     const rp = visualPatterns[Math.floor(Math.random() * visualPatterns.length)];
     state.pattern = rp.id;
     [...patternGrid.children].forEach(c => {
       c.classList.toggle('active', c.dataset.pattern === rp.id);
     });
-    // Random palette
-    state.paletteIdx = Math.floor(Math.random() * PALETTES.length);
+
+    // Smart palette: 70% mood-matched, 30% fully random
+    const mood = PATTERN_MOOD[rp.id] || 'moody';
+    const affinityNames = PATTERN_PALETTE_AFFINITY[mood] || [];
+    let chosenPaletteIdx;
+    if (Math.random() < 0.7 && affinityNames.length) {
+      const name = affinityNames[Math.floor(Math.random() * affinityNames.length)];
+      const idx = PALETTES.findIndex(p => p.name === name);
+      chosenPaletteIdx = idx >= 0 ? idx : Math.floor(Math.random() * PALETTES.length);
+    } else {
+      chosenPaletteIdx = Math.floor(Math.random() * PALETTES.length);
+    }
+    state.paletteIdx = chosenPaletteIdx;
     [...paletteGrid.children].forEach((c, i) => c.classList.toggle('active', i === state.paletteIdx));
-    // Random mode
-    state.mode = Math.random() > 0.5 ? 'dark' : 'light';
+
+    // Mode: bias dark for neon patterns
+    const darkBias = mood === 'neon' ? 0.8 : 0.5;
+    state.mode = Math.random() < darkBias ? 'dark' : 'light';
     [...modeSeg.children].forEach(c => c.classList.toggle('active', c.dataset.mode === state.mode));
-    // Random density/grain
-    state.density = 1 + Math.floor(Math.random() * 10);
+
+    // Aggressive density — weighted toward extremes
+    const densityRoll = Math.random();
+    state.density = densityRoll < 0.25
+      ? 1 + Math.floor(Math.random() * 3)
+      : densityRoll < 0.5
+        ? 8 + Math.floor(Math.random() * 3)
+        : 1 + Math.floor(Math.random() * 10);
     densitySlider.value = state.density;
     densityVal.textContent = state.density;
-    state.grain = Math.floor(Math.random() * 7);
+
+    // Aggressive grain — often clean or heavy, rarely mid
+    const grainRoll = Math.random();
+    state.grain = grainRoll < 0.3
+      ? 0
+      : grainRoll < 0.6
+        ? 7 + Math.floor(Math.random() * 4)
+        : Math.floor(Math.random() * 11);
     grainSlider.value = state.grain;
     grainVal.textContent = state.grain;
+
     updateFieldVisibility();
     buildPaletteGrid();
     reseed();
