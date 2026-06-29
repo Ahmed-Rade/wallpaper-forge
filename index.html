@@ -22,12 +22,19 @@
       <button data-device="phone" class="active">Phone</button>
       <button data-device="desktop">Desktop</button>
       <button data-device="square">Square</button>
+      <button data-device="custom">Custom</button>
     </div>
   </div>
 
   <div class="field" id="sizeField">
     <label>Resolution</label>
     <select id="sizeSelect"></select>
+    <div class="custom-res-row" id="customResRow" style="display:none;">
+      <input type="number" id="customW" min="1" max="8000" value="1170">
+      <span>×</span>
+      <input type="number" id="customH" min="1" max="8000" value="2532">
+    </div>
+    <button class="detect-btn" id="detectResBtn" style="display:none;">⌖ Use my screen resolution</button>
   </div>
 
   <hr>

@@ -21,32 +21,32 @@
   // ---------- Sizes ----------
   const SIZES = {
     phone: [
-      { label: "iPhone 16 Pro Max — 1320×2868", w: 1320, h: 2868 },
-      { label: "iPhone 16 Pro — 1206×2622", w: 1206, h: 2622 },
-      { label: "iPhone 15/14 — 1170×2532", w: 1170, h: 2532 },
-      { label: "iPhone SE — 750×1334", w: 750, h: 1334 },
-      { label: "Pixel 9 Pro — 1280×2856", w: 1280, h: 2856 },
-      { label: "Pixel 9 — 1080×2400", w: 1080, h: 2400 },
-      { label: "Galaxy S24 — 1080×2340", w: 1080, h: 2340 },
-      { label: "Galaxy S24 Ultra — 1440×3120", w: 1440, h: 3120 },
+      { label: "1320 × 2868", w: 1320, h: 2868 },
+      { label: "1206 × 2622", w: 1206, h: 2622 },
+      { label: "1170 × 2532", w: 1170, h: 2532 },
+      { label: "750 × 1334", w: 750, h: 1334 },
+      { label: "1280 × 2856", w: 1280, h: 2856 },
+      { label: "1080 × 2400", w: 1080, h: 2400 },
+      { label: "1080 × 2340", w: 1080, h: 2340 },
+      { label: "1440 × 3120", w: 1440, h: 3120 },
     ],
     desktop: [
-      { label: "1920×1080 (FHD)", w: 1920, h: 1080 },
-      { label: "2560×1440 (QHD)", w: 2560, h: 1440 },
-      { label: "3840×2160 (4K)", w: 3840, h: 2160 },
-      { label: "5120×2880 (5K)", w: 5120, h: 2880 },
-      { label: "3024×1964 (MBP 14\")", w: 3024, h: 1964 },
-      { label: "3456×2234 (MBP 16\")", w: 3456, h: 2234 },
-      { label: "2560×1600 (16:10)", w: 2560, h: 1600 },
-      { label: "3440×1440 (Ultrawide)", w: 3440, h: 1440 },
-      { label: "5120×1440 (Super Ultrawide)", w: 5120, h: 1440 },
-      { label: "1280×720 (HD)", w: 1280, h: 720 },
+      { label: "1920 × 1080", w: 1920, h: 1080 },
+      { label: "2560 × 1440", w: 2560, h: 1440 },
+      { label: "3840 × 2160", w: 3840, h: 2160 },
+      { label: "5120 × 2880", w: 5120, h: 2880 },
+      { label: "3024 × 1964", w: 3024, h: 1964 },
+      { label: "3456 × 2234", w: 3456, h: 2234 },
+      { label: "2560 × 1600", w: 2560, h: 1600 },
+      { label: "3440 × 1440", w: 3440, h: 1440 },
+      { label: "5120 × 1440", w: 5120, h: 1440 },
+      { label: "1280 × 720", w: 1280, h: 720 },
     ],
     square: [
-      { label: "1080×1080", w: 1080, h: 1080 },
-      { label: "1440×1440", w: 1440, h: 1440 },
-      { label: "2048×2048", w: 2048, h: 2048 },
-      { label: "2880×2880", w: 2880, h: 2880 },
+      { label: "1080 × 1080", w: 1080, h: 1080 },
+      { label: "1440 × 1440", w: 1440, h: 1440 },
+      { label: "2048 × 2048", w: 2048, h: 2048 },
+      { label: "2880 × 2880", w: 2880, h: 2880 },
     ],
   };
 
@@ -183,6 +183,8 @@
     density: 5,
     grain: 3,
     solidColor: "#16282c",
+    customW: 1170,
+    customH: 2532,
   };
 
   // ---------- DOM ----------
@@ -203,8 +205,26 @@
   const densityField = document.getElementById('densityField');
   const solidColorPicker = document.getElementById('solidColorPicker');
   const solidColorHex = document.getElementById('solidColorHex');
+  const customResRow = document.getElementById('customResRow');
+  const customW = document.getElementById('customW');
+  const customH = document.getElementById('customH');
+  const detectResBtn = document.getElementById('detectResBtn');
+
+  function currentDims() {
+    if (state.device === 'custom') return { w: state.customW, h: state.customH };
+    return SIZES[state.device][state.sizeIdx];
+  }
 
   function buildSizeOptions() {
+    const isCustom = state.device === 'custom';
+    sizeSelect.style.display = isCustom ? 'none' : '';
+    customResRow.style.display = isCustom ? 'flex' : 'none';
+    detectResBtn.style.display = isCustom ? 'block' : 'none';
+    if (isCustom) {
+      customW.value = state.customW;
+      customH.value = state.customH;
+      return;
+    }
     sizeSelect.innerHTML = "";
     SIZES[state.device].forEach((s, i) => {
       const opt = document.createElement('option');
@@ -331,6 +351,32 @@
     render();
   });
 
+  function clampRes(v) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) return 1;
+    return Math.max(1, Math.min(8000, v));
+  }
+
+  customW.addEventListener('change', () => {
+    state.customW = clampRes(customW.value);
+    customW.value = state.customW;
+    render();
+  });
+  customH.addEventListener('change', () => {
+    state.customH = clampRes(customH.value);
+    customH.value = state.customH;
+    render();
+  });
+
+  detectResBtn.addEventListener('click', () => {
+    const dpr = window.devicePixelRatio || 1;
+    state.customW = clampRes(Math.round(window.screen.width * dpr));
+    state.customH = clampRes(Math.round(window.screen.height * dpr));
+    customW.value = state.customW;
+    customH.value = state.customH;
+    render();
+  });
+
   function setSolidColor(hex) {
     if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
     state.solidColor = hex;
@@ -425,7 +471,7 @@
   });
 
   document.getElementById('downloadBtn').addEventListener('click', () => {
-    const dims = SIZES[state.device][state.sizeIdx];
+    const dims = currentDims();
     const link = document.createElement('a');
     link.download = `wallpaper-${state.pattern}-${state.mode}-${dims.w}x${dims.h}-${currentSeed}.png`;
     link.href = cv.toDataURL('image/png');
@@ -1259,7 +1305,7 @@
 
   // ---------- Render ----------
   function render() {
-    const dims = SIZES[state.device][state.sizeIdx];
+    const dims = currentDims();
     cv.width = dims.w;
     cv.height = dims.h;
     frameLabel.textContent = `${dims.w} × ${dims.h}`;

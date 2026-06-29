@@ -106,6 +106,37 @@
     color: var(--paper);
   }
 
+  .custom-res-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .custom-res-row input[type=number] {
+    flex: 1;
+    width: 0;
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .custom-res-row span { color: rgba(22,20,15,0.5); }
+
+  .detect-btn {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: center;
+    border: 1px dashed var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .detect-btn:hover { background: var(--panel); }
+
   select {
     font-family: inherit;
     font-size: 14px;
