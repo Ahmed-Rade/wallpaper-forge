@@ -170,7 +170,7 @@
     { id: "circuit",    label: "Circuit" },
     { id: "halftone",   label: "Halftone" },
     { id: "mosaic",     label: "Mosaic" },
-    { id: "weave",      label: "Weave" },
+    { id: "truchet",    label: "Truchet" },
   ];
 
   // ---------- State ----------
@@ -364,7 +364,7 @@
     stripes:"organic", grid:"cool", dots:"warm", waves:"cool", triangles:"moody",
     shards:"neon", scatter:"warm", hexgrid:"cool", spiral:"neon", crosshatch:"moody",
     confetti:"warm", gradient:"neon", checker:"moody", chevron:"organic", ripple:"cool",
-    diamondnet:"cool", circuit:"neon", halftone:"moody", mosaic:"organic", weave:"organic",
+    diamondnet:"cool", circuit:"neon", halftone:"moody", mosaic:"organic", truchet:"cool",
   };
 
   document.getElementById('randomBtn').addEventListener('click', () => {
@@ -396,11 +396,6 @@
     }
     state.paletteIdx = chosenPaletteIdx;
     [...paletteGrid.children].forEach((c, i) => c.classList.toggle('active', i === state.paletteIdx));
-
-    // Mode: bias dark for neon patterns
-    const darkBias = (mood === 'neon' || mood === 'moody') ? 0.85 : 0.5;
-    state.mode = Math.random() < darkBias ? 'dark' : 'light';
-    [...modeSeg.children].forEach(c => c.classList.toggle('active', c.dataset.mode === state.mode));
 
     // Aggressive density — weighted toward extremes
     const densityRoll = Math.random();
@@ -1108,30 +1103,33 @@
     }
   }
 
-  function drawWeave(ctx, w, h, pal, density) {
+  function drawTruchet(ctx, w, h, pal, density) {
     ctx.fillStyle = pal.bg;
     ctx.fillRect(0, 0, w, h);
-    const count = Math.round(lerp(8, 36, density / 10));
-    const gap = w / count;
-    const stripW = gap * lerp(0.55, 0.75, rand());
-    const colorH = pick(pal.colors);
-    const colorV = pick(pal.colors.filter(c => c !== colorH) .length ? pal.colors.filter(c => c !== colorH) : pal.colors);
-    const rowCount = Math.ceil(h / gap) + 1;
-    // horizontal strands (drawn behind)
-    for (let r = 0; r < rowCount; r++) {
-      const y = r * gap;
-      ctx.fillStyle = rgbaFix(colorH, lerp(0.7, 1, rand()));
-      ctx.fillRect(0, y, w, stripW);
-    }
-    // vertical strands with alternating over/under clip
-    for (let c = 0; c < count; c++) {
-      const x = c * gap;
-      for (let r = 0; r < rowCount; r++) {
-        const over = (c + r) % 2 === 0;
-        if (!over) continue; // under = hidden behind horizontal
-        const y = r * gap;
-        ctx.fillStyle = rgbaFix(colorV, lerp(0.7, 1, rand()));
-        ctx.fillRect(x, y - gap * 0.3, stripW, gap * 1.6);
+    const cols = Math.round(lerp(6, 28, density / 10));
+    const cell = w / cols;
+    const rows = Math.ceil(h / cell) + 1;
+    ctx.lineWidth = Math.max(1, cell * lerp(0.08, 0.18, rand()));
+    const useFill = rand() > 0.5; // either arc-fill or arc-stroke style
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = col * cell;
+        const y = row * cell;
+        const flip = rand() > 0.5;
+        const color = pick(pal.colors);
+        const alpha = lerp(0.55, 1, rand());
+        ctx.strokeStyle = rgbaFix(color, alpha);
+        ctx.fillStyle   = rgbaFix(color, alpha * 0.35);
+        ctx.beginPath();
+        if (flip) {
+          ctx.arc(x,        y,        cell * 0.5, 0,           Math.PI / 2);
+          ctx.arc(x + cell, y + cell, cell * 0.5, Math.PI,     Math.PI * 3 / 2);
+        } else {
+          ctx.arc(x + cell, y,        cell * 0.5, Math.PI / 2, Math.PI);
+          ctx.arc(x,        y + cell, cell * 0.5, Math.PI * 3 / 2, Math.PI * 2);
+        }
+        ctx.stroke();
+        if (useFill) ctx.fill();
       }
     }
   }
@@ -1240,7 +1238,7 @@
     circuit:    drawCircuit,
     halftone:   drawHalftone,
     mosaic:     drawMosaic,
-    weave:      drawWeave,
+    truchet:    drawTruchet,
   };
 
   function addGrain(ctx, w, h, amount) {
