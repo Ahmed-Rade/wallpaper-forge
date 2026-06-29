@@ -154,8 +154,6 @@
     mode: "dark",
     density: 5,
     grain: 3,
-    glass: 0,
-    barwarp: 0,
     solidColor: "#16282c",
   };
 
@@ -172,10 +170,6 @@
   const densityVal = document.getElementById('densityVal');
   const grainSlider = document.getElementById('grainSlider');
   const grainVal = document.getElementById('grainVal');
-  const glassSlider = document.getElementById('glassSlider');
-  const glassVal = document.getElementById('glassVal');
-  const barwarpSlider = document.getElementById('barwarpSlider');
-  const barwarpVal = document.getElementById('barwarpVal');
   const solidColorField = document.getElementById('solidColorField');
   const paletteField = document.getElementById('paletteField');
   const densityField = document.getElementById('densityField');
@@ -309,18 +303,6 @@
     render();
   });
 
-  glassSlider.addEventListener('input', () => {
-    state.glass = parseInt(glassSlider.value, 10);
-    glassVal.textContent = state.glass;
-    render();
-  });
-
-  barwarpSlider.addEventListener('input', () => {
-    state.barwarp = parseInt(barwarpSlider.value, 10);
-    barwarpVal.textContent = state.barwarp;
-    render();
-  });
-
   function setSolidColor(hex) {
     if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
     state.solidColor = hex;
@@ -363,8 +345,6 @@
     state.grain = Math.floor(Math.random() * 7);
     grainSlider.value = state.grain;
     grainVal.textContent = state.grain;
-    state.glass = 0; glassSlider.value = 0; glassVal.textContent = 0;
-    state.barwarp = 0; barwarpSlider.value = 0; barwarpVal.textContent = 0;
     updateFieldVisibility();
     buildPaletteGrid();
     reseed();
@@ -1126,117 +1106,6 @@
     ctx.putImageData(imgData, 0, 0);
   }
 
-  // Liquid-glass / "Nothing OS" style frosted overlay.
-  // Blurs the artwork beneath, then layers translucency, a soft
-  // diagonal specular sheen, and a thin refractive rim light.
-  function addGlass(ctx, w, h, amount) {
-    if (amount <= 0) return;
-    const t = amount / 10;
-
-    // 1. Frost the base art: snapshot, blur it back over itself.
-    const snap = document.createElement('canvas');
-    snap.width = w; snap.height = h;
-    snap.getContext('2d').drawImage(ctx.canvas, 0, 0);
-    const blurPx = Math.max(1, Math.min(w, h) * lerp(0.0, 0.035, t));
-    ctx.save();
-    ctx.filter = `blur(${blurPx}px)`;
-    ctx.drawImage(snap, 0, 0, w, h);
-    ctx.restore();
-
-    // 2. Milky translucent wash, mode-aware so it reads as glass not fog.
-    const wash = state.mode === 'dark'
-      ? `rgba(255,255,255,${lerp(0.03, 0.16, t)})`
-      : `rgba(255,255,255,${lerp(0.05, 0.30, t)})`;
-    ctx.fillStyle = wash;
-    ctx.fillRect(0, 0, w, h);
-
-    // 3. Diagonal specular sheen, top-left to center.
-    const sheen = ctx.createLinearGradient(0, 0, w * 0.65, h * 0.5);
-    sheen.addColorStop(0, `rgba(255,255,255,${lerp(0, 0.35, t)})`);
-    sheen.addColorStop(0.35, `rgba(255,255,255,${lerp(0, 0.10, t)})`);
-    sheen.addColorStop(0.7, 'rgba(255,255,255,0)');
-    ctx.fillStyle = sheen;
-    ctx.fillRect(0, 0, w, h);
-
-    // 4. Subtle vignette so edges feel like curved glass, not a flat tint.
-    const vig = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.2, w/2, h/2, Math.max(w,h)*0.7);
-    vig.addColorStop(0, 'rgba(0,0,0,0)');
-    vig.addColorStop(1, `rgba(0,0,0,${lerp(0, 0.18, t)})`);
-    ctx.fillStyle = vig;
-    ctx.fillRect(0, 0, w, h);
-
-    // 5. Thin bright rim catching light along the top and left edges.
-    const rim = Math.max(1, Math.min(w, h) * 0.006);
-    ctx.fillStyle = `rgba(255,255,255,${lerp(0, 0.5, t)})`;
-    ctx.fillRect(0, 0, w, rim);
-    ctx.fillRect(0, 0, rim, h);
-
-    // 6. Fine static-like grain so the frost doesn't look like a flat blur.
-    const imgData = ctx.getImageData(0, 0, w, h);
-    const data = imgData.data;
-    const noiseAmt = lerp(0, 6, t);
-    for (let i = 0; i < data.length; i += 4) {
-      const n = (rand() - 0.5) * noiseAmt;
-      data[i] = Math.min(255, Math.max(0, data[i] + n));
-      data[i+1] = Math.min(255, Math.max(0, data[i+1] + n));
-      data[i+2] = Math.min(255, Math.max(0, data[i+2] + n));
-    }
-    ctx.putImageData(imgData, 0, 0);
-  }
-
-  // Fluted/ribbed-glass refraction: simulates vertical glass ridges like
-  // reeded glass. Each column samples a horizontally-offset source pixel
-  // (sinusoidal per ridge) AND gets a lighting gradient (highlight on one
-  // edge, shadow on the other, per ridge) so the effect reads as physical
-  // glass ribbing even over a flat solid color, not just a pixel-shuffle.
-  function addBarWarp(ctx, w, h, amount) {
-    if (amount <= 0) return;
-    const t = amount / 10;
-
-    const snap = document.createElement('canvas');
-    snap.width = w; snap.height = h;
-    snap.getContext('2d').drawImage(ctx.canvas, 0, 0);
-    const src = snap.getContext('2d').getImageData(0, 0, w, h);
-    const sd = src.data;
-
-    const out = ctx.createImageData(w, h);
-    const od = out.data;
-
-    const ridgeW = lerp(26, 9, t);            // px per ridge, denser at high t
-    const ridgeCount = Math.max(1, Math.round(w / ridgeW));
-    const actualRidgeW = w / ridgeCount;
-    const maxShift = lerp(0, actualRidgeW * 0.9, t);   // horizontal pixel displacement
-    const lightStrength = lerp(0, 0.55, t);             // highlight/shadow intensity
-    const jitter = lerp(0, 0.15, t);
-
-    for (let y = 0; y < h; y++) {
-      // slight per-row jitter so ridges aren't perfectly uniform vertically
-      const rowJ = (Math.sin(y * 0.07) * 0.5 + 0.5) * jitter;
-      for (let x = 0; x < w; x++) {
-        const ridgePos = (x / actualRidgeW) % 1; // 0..1 across this ridge
-        const curve = Math.sin((ridgePos + rowJ) * Math.PI); // 0 at edges, 1 at center
-        const slope = Math.cos((ridgePos + rowJ) * Math.PI); // -1..1, drives refraction dir
-
-        const shift = slope * maxShift;
-        let sx = Math.round(x + shift);
-        sx = Math.max(0, Math.min(w - 1, sx));
-
-        const si = (y * w + sx) * 4;
-        const di = (y * w + x) * 4;
-
-        // lighting: edges of each ridge get shadow, just-off-center gets a
-        // bright specular streak, like light catching a curved rib.
-        const light = (slope * lightStrength) + (Math.pow(curve, 6) * lightStrength * 0.9);
-
-        od[di]   = clamp255(sd[si]   + light * 255);
-        od[di+1] = clamp255(sd[si+1] + light * 255);
-        od[di+2] = clamp255(sd[si+2] + light * 255);
-        od[di+3] = sd[si+3];
-      }
-    }
-    ctx.putImageData(out, 0, 0);
-  }
-
   function clamp255(v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
 
   // ---------- Render ----------
@@ -1255,8 +1124,6 @@
 
     fn(ctx, dims.w, dims.h, pal, state.density);
     addGrain(ctx, dims.w, dims.h, state.grain);
-    addGlass(ctx, dims.w, dims.h, state.glass);
-    addBarWarp(ctx, dims.w, dims.h, state.barwarp);
   }
 
   // ---------- Init ----------
